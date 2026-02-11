@@ -1,12 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getSettings, saveSettings } from '../../data';
 
 export default function Settings() {
-    const [settings, setSettingsState] = useState({});
-
-    useEffect(() => {
-        setSettingsState(getSettings());
-    }, []);
+    const [settings, setSettingsState] = useState(() => getSettings());
 
     const handleSaveSettings = () => {
         saveSettings(settings);

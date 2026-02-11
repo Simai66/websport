@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar';
 import Toast from '../components/Toast';
@@ -10,7 +10,8 @@ import {
     addBooking,
     getSettings,
     formatPrice,
-    formatDateThai
+    formatDateThai,
+    typeLabels
 } from '../data';
 
 export default function FieldDetail() {
@@ -169,12 +170,7 @@ export default function FieldDetail() {
         setSelectedSlots([]);
     };
 
-    const typeLabels = {
-        football: 'ฟุตบอล',
-        badminton: 'แบดมินตัน',
-        basketball: 'บาสเกตบอล',
-        tennis: 'เทนนิส'
-    };
+
 
     return (
         <div>
