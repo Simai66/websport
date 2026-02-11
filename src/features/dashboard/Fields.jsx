@@ -8,6 +8,8 @@ export default function Fields() {
     const [editingField, setEditingField] = useState(null);
     const [confirmState, setConfirmState] = useState({ isOpen: false, fieldId: null });
     const [errors, setErrors] = useState({});
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterType, setFilterType] = useState('all');
     const [fieldForm, setFieldForm] = useState({
         name: '',
         type: 'football',
@@ -45,7 +47,6 @@ export default function Fields() {
     const handleFieldFormChange = (e) => {
         const { name, value } = e.target;
         setFieldForm(prev => ({ ...prev, [name]: value }));
-        // Clear error on change
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
@@ -102,41 +103,93 @@ export default function Fields() {
         transition: 'border-color 0.2s'
     });
 
+    // Filtered fields
+    const filteredFields = fields.filter(f => {
+        if (filterType !== 'all' && f.type !== filterType) return false;
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            return f.name.toLowerCase().includes(q) || f.description.toLowerCase().includes(q);
+        }
+        return true;
+    });
+
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ color: 'var(--text-primary)' }}>จัดการสนามกีฬา ({fields.length})</h2>
-                <button className="btn btn-primary btn-glow" onClick={openAddFieldModal}>➕ เพิ่มสนาม</button>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="admin-page-title" style={{ marginBottom: 0 }}>
+                    <h2>Manage Fields</h2>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginLeft: '0.5rem' }}>จัดการสนาม</span>
+                </div>
+                <button className="btn btn-primary btn-glow" onClick={openAddFieldModal}>
+                    ➕ Add New Field
+                </button>
             </div>
-            <div className="premium-card">
-                <div className="table-container">
-                    <table className="table" style={{ width: '100%' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
-                                <th style={{ padding: '1rem' }}>รูป</th>
-                                <th style={{ padding: '1rem' }}>ชื่อสนาม</th>
-                                <th style={{ padding: '1rem' }}>ประเภท</th>
-                                <th style={{ padding: '1rem' }}>ราคา/ชม.</th>
-                                <th style={{ padding: '1rem' }}>จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {fields.map(field => (
-                                <tr key={field.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '1rem' }}><img src={field.image} alt={field.name} width="60" height="40" style={{ objectFit: 'cover', borderRadius: '4px' }} /></td>
-                                    <td style={{ padding: '1rem', fontWeight: '600' }}>{field.name}</td>
-                                    <td style={{ padding: '1rem' }}><span className="badge badge-primary">{getTypeName(field.type)}</span></td>
-                                    <td style={{ padding: '1rem' }}>฿{formatPrice(field.price)}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button className="btn btn-sm btn-secondary" onClick={() => openEditFieldModal(field)}>✏️ แก้ไข</button>
-                                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteField(field.id)}>🗑️ ลบ</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+
+            {/* Search & Filter */}
+            <div className="admin-filter-bar">
+                <div className="admin-search" style={{ minWidth: '280px', flex: 1, maxWidth: '400px' }}>
+                    <span className="admin-search-icon">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Search fields..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        style={{
+                            padding: '0.6rem 1rem',
+                            background: 'var(--bg-glass)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-lg)',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.875rem'
+                        }}
+                    >
+                        {fieldTypes.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {/* Field Cards Grid */}
+            <div className="admin-fields-grid">
+                {filteredFields.map(field => (
+                    <div key={field.id} className="admin-field-card">
+                        <div className="admin-field-card-image">
+                            <img src={field.image} alt={field.name} />
+                            <span className="admin-field-card-badge active">Active</span>
+                        </div>
+                        <div className="admin-field-card-body">
+                            <div className="admin-field-card-type">{getTypeName(field.type)}</div>
+                            <div className="admin-field-card-name">{field.name}</div>
+                            <div className="admin-field-card-desc">{field.description}</div>
+                            <div className="admin-field-card-meta">
+                                <div className="admin-field-card-capacity">
+                                    👥 {field.facilities ? field.facilities.length : 0} facilities
+                                </div>
+                                <div className="admin-field-card-price">
+                                    ฿{formatPrice(field.price)} <span>/ hr</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="admin-field-card-actions">
+                            <button className="btn btn-sm btn-secondary" onClick={() => openEditFieldModal(field)}>✏️ แก้ไข</button>
+                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteField(field.id)}>🗑️ ลบ</button>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Add New Field Card */}
+                <div className="admin-field-card-add" onClick={openAddFieldModal}>
+                    <div className="admin-field-card-add-icon">+</div>
+                    <div className="admin-field-card-add-title">Create Another Field</div>
+                    <div className="admin-field-card-add-desc">Add a new sports facility, set pricing and upload images.</div>
                 </div>
             </div>
 

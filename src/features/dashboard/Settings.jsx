@@ -3,106 +3,207 @@ import { getSettings, saveSettings } from '../../data';
 
 export default function Settings() {
     const [settings, setSettingsState] = useState(() => getSettings());
+    const [saved, setSaved] = useState(false);
 
-    const handleSaveSettings = () => {
+    const updateField = (key, value) => {
+        setSettingsState(prev => ({ ...prev, [key]: value }));
+        setSaved(false);
+    };
+
+    const handleSave = () => {
         saveSettings(settings);
-        alert('บันทึกการตั้งค่าเรียบร้อย');
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
     };
 
     return (
         <div>
-            <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>⚙️ ตั้งค่าระบบ</h2>
+            <div className="admin-page-title" style={{ marginBottom: '2rem' }}>
+                <h2>ตั้งค่า</h2>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginLeft: '0.5rem' }}>Settings</span>
+            </div>
 
-            <div style={{ maxWidth: '600px' }}>
-                <div className="premium-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem', color: 'var(--text-primary)' }}>💳 PromptPay</h3>
-
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>เบอร์ PromptPay</label>
-                        <input
-                            type="text"
-                            className="premium-input"
-                            placeholder="0812345678"
-                            value={settings.promptPayNumber || ''}
-                            onChange={(e) => setSettingsState(prev => ({ ...prev, promptPayNumber: e.target.value }))}
-                            style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-                        />
+            {/* General Information */}
+            <div className="admin-settings-section">
+                <div className="admin-settings-header">
+                    <div className="admin-settings-accent"></div>
+                    <h3>GENERAL INFORMATION</h3>
+                </div>
+                <div className="admin-settings-subtitle">ข้อมูลทั่วไปของสนามกีฬา</div>
+                <div className="admin-settings-card">
+                    <div className="admin-settings-grid">
+                        <div>
+                            <label className="admin-settings-label">Arena Name</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.arenaName || ''}
+                                onChange={(e) => updateField('arenaName', e.target.value)}
+                                placeholder="ชื่อสนาม"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Contact Number</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.contactPhone || ''}
+                                onChange={(e) => updateField('contactPhone', e.target.value)}
+                                placeholder="08x-xxx-xxxx"
+                            />
+                        </div>
+                        <div className="full-width">
+                            <label className="admin-settings-label">Address / Google Maps</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.address || ''}
+                                onChange={(e) => updateField('address', e.target.value)}
+                                placeholder="ที่อยู่หรือลิงก์ Google Maps"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Opening Time</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.openingTime || '08:00'}
+                                onChange={(e) => updateField('openingTime', e.target.value)}
+                                placeholder="08:00"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Closing Time</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.closingTime || '23:00'}
+                                onChange={(e) => updateField('closingTime', e.target.value)}
+                                placeholder="23:00"
+                            />
+                        </div>
                     </div>
+                </div>
+            </div>
 
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>ชื่อบัญชี</label>
-                        <input
-                            type="text"
-                            className="premium-input"
-                            placeholder="ชื่อที่จะแสดงใน QR"
-                            value={settings.promptPayName || ''}
-                            onChange={(e) => setSettingsState(prev => ({ ...prev, promptPayName: e.target.value }))}
-                            style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>URL รูป QR Code (ไม่บังคับ)</label>
-                        <input
-                            type="text"
-                            className="premium-input"
-                            placeholder="https://... หรือเว้นว่างเพื่อใช้ QR อัตโนมัติ"
-                            value={settings.customQRImage || ''}
-                            onChange={(e) => setSettingsState(prev => ({ ...prev, customQRImage: e.target.value }))}
-                            style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-                        />
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                            ใส่ URL รูป QR PromptPay ของคุณ (ถ้าว่างจะ generate อัตโนมัติ)
-                        </p>
-                        {settings.customQRImage && (
-                            <div style={{ marginTop: '0.5rem', background: 'white', padding: '0.5rem', borderRadius: '8px', display: 'inline-block' }}>
-                                <img
-                                    src={settings.customQRImage}
-                                    alt="QR Preview"
-                                    style={{ maxHeight: '100px' }}
-                                    onError={(e) => e.target.style.display = 'none'}
-                                />
+            {/* Payment Configuration */}
+            <div className="admin-settings-section">
+                <div className="admin-settings-header">
+                    <div className="admin-settings-accent"></div>
+                    <h3>PAYMENT CONFIGURATION</h3>
+                </div>
+                <div className="admin-settings-subtitle">ตั้งค่าการชำระเงินและ PromptPay</div>
+                <div className="admin-settings-card">
+                    <div className="admin-settings-grid">
+                        <div className="full-width" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+                            <div>
+                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Accept Payments</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>เปิดรับชำระเงินผ่าน PromptPay</div>
                             </div>
-                        )}
+                            <div
+                                className={`admin-toggle ${settings.acceptPayments !== false ? 'active' : ''}`}
+                                onClick={() => updateField('acceptPayments', settings.acceptPayments === false ? true : false)}
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">PromptPay ID</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.promptPayId || ''}
+                                onChange={(e) => updateField('promptPayId', e.target.value)}
+                                placeholder="0-xxxx-xxxxx"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Account Name</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.accountName || ''}
+                                onChange={(e) => updateField('accountName', e.target.value)}
+                                placeholder="ชื่อบัญชี"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Account Number</label>
+                            <input
+                                type="text"
+                                className="admin-settings-input"
+                                value={settings.accountNumber || ''}
+                                onChange={(e) => updateField('accountNumber', e.target.value)}
+                                placeholder="xxx-x-xxxxx-x"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Booking Timeout (Minutes)</label>
+                            <input
+                                type="number"
+                                className="admin-settings-input"
+                                value={settings.bookingTimeoutMinutes || 30}
+                                onChange={(e) => updateField('bookingTimeoutMinutes', parseInt(e.target.value) || 30)}
+                                placeholder="30"
+                            />
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="premium-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem', fontSize: '1.125rem', color: 'var(--text-primary)' }}>⏱️ การจอง</h3>
-
-                    <div className="form-group" style={{ marginBottom: '1rem' }}>
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>เวลาชำระเงิน (นาที)</label>
-                        <input
-                            type="number"
-                            className="premium-input"
-                            placeholder="10"
-                            value={settings.bookingTimeoutMinutes || ''}
-                            onChange={(e) => setSettingsState(prev => ({ ...prev, bookingTimeoutMinutes: parseInt(e.target.value) || 10 }))}
-                            style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-                        />
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                            ลูกค้าต้องชำระภายในเวลานี้ หลังจากจอง
-                        </p>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>จองสูงสุด (ชั่วโมง)</label>
-                        <input
-                            type="number"
-                            className="premium-input"
-                            placeholder="4"
-                            min="1"
-                            max="8"
-                            value={settings.maxHoursPerBooking || ''}
-                            onChange={(e) => setSettingsState(prev => ({ ...prev, maxHoursPerBooking: parseInt(e.target.value) || 4 }))}
-                            style={{ width: '100%', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-                        />
+            {/* Admin Security */}
+            <div className="admin-settings-section">
+                <div className="admin-settings-header">
+                    <div className="admin-settings-accent"></div>
+                    <h3>ADMIN SECURITY</h3>
+                </div>
+                <div className="admin-settings-subtitle">เปลี่ยนรหัสผ่านผู้ดูแลระบบ</div>
+                <div className="admin-settings-card">
+                    <div className="admin-settings-grid">
+                        <div className="full-width">
+                            <label className="admin-settings-label">Current Password</label>
+                            <input
+                                type="password"
+                                className="admin-settings-input"
+                                value={settings.currentPassword || ''}
+                                onChange={(e) => updateField('currentPassword', e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">New Password</label>
+                            <input
+                                type="password"
+                                className="admin-settings-input"
+                                value={settings.newPassword || ''}
+                                onChange={(e) => updateField('newPassword', e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <div>
+                            <label className="admin-settings-label">Confirm Password</label>
+                            <input
+                                type="password"
+                                className="admin-settings-input"
+                                value={settings.confirmPassword || ''}
+                                onChange={(e) => updateField('confirmPassword', e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <button className="btn btn-primary btn-lg btn-glow" style={{ width: '100%' }} onClick={handleSaveSettings}>
-                    💾 บันทึกการตั้งค่า
-                </button>
+            {/* Sticky Footer */}
+            <div className="admin-sticky-footer">
+                <div className="admin-sticky-footer-warn">
+                    <span className="dot"></span>
+                    Unsaved changes will be lost
+                </div>
+                <div className="admin-sticky-footer-actions">
+                    <button className="btn btn-secondary" onClick={() => setSettingsState(getSettings())}>Cancel</button>
+                    <button className="btn btn-primary btn-glow" onClick={handleSave}>
+                        {saved ? '✓ Saved' : 'Save Settings'}
+                    </button>
+                </div>
             </div>
         </div>
     );

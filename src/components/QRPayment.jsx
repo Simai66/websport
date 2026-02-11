@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSettings, uploadPaymentSlip, getBookings, formatPrice } from '../data';
 
-// Compress image before storing to avoid localStorage overflow
 function compressImage(dataUrl, maxWidth = 600, quality = 0.6) {
     return new Promise((resolve) => {
         const img = new Image();
@@ -14,7 +13,7 @@ function compressImage(dataUrl, maxWidth = 600, quality = 0.6) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             resolve(canvas.toDataURL('image/jpeg', quality));
         };
-        img.onerror = () => resolve(dataUrl); // Fallback to original
+        img.onerror = () => resolve(dataUrl);
         img.src = dataUrl;
     });
 }
@@ -29,7 +28,6 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
     const fileInputRef = useRef(null);
     const timerInitialized = useRef(false);
 
-    // Load fresh booking data with slip from localStorage
     useEffect(() => {
         if (booking?.id) {
             const allBookings = getBookings();
@@ -40,7 +38,6 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         }
     }, [booking?.id]);
 
-    // Generate QR code
     useEffect(() => {
         let cancelled = false;
         async function generateQR() {
@@ -58,11 +55,9 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         return () => { cancelled = true; };
     }, [amount, settings.promptPayNumber]);
 
-    // Initialize timer ONCE
     useEffect(() => {
         if (timerInitialized.current) return;
         timerInitialized.current = true;
-
         let initialTime;
         if (booking?.paymentDeadline) {
             const deadline = new Date(booking.paymentDeadline);
@@ -74,7 +69,6 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         setTimeLeft(initialTime);
     }, [booking?.paymentDeadline, settings.bookingTimeoutMinutes]);
 
-    // Countdown timer
     useEffect(() => {
         if (timeLeft === null || timeLeft <= 0) {
             if (timeLeft === 0 && onTimeout) onTimeout();
@@ -92,7 +86,6 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         }, 1000);
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [timeLeft === null]); // eslint-disable-line react-hooks/exhaustive-deps
-    // NOTE: we intentionally only re-run when timeLeft transitions from null → number
 
     const formatTime = (seconds) => {
         if (seconds === null) return '--:--';
@@ -104,20 +97,16 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
     const handleFileSelect = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         if (file.size > 5 * 1024 * 1024) {
             alert('ไฟล์ใหญ่เกินไป (สูงสุด 5MB)');
             return;
         }
-
         setUploading(true);
         const reader = new FileReader();
         reader.onload = async (event) => {
             try {
-                // Compress to prevent localStorage overflow
                 const compressed = await compressImage(event.target.result);
                 setSlipPreview(compressed);
-
                 if (booking?.id) {
                     uploadPaymentSlip(booking.id, compressed);
                     if (onSlipUploaded) onSlipUploaded(compressed);
@@ -134,120 +123,190 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
 
     return (
         <div className="modal-overlay active" onClick={onClose} role="dialog" aria-modal="true" aria-label="ชำระเงิน">
-            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
-                <div className="modal-header">
-                    <h3 className="modal-title">💳 ชำระเงิน</h3>
-                    <button className="modal-close" onClick={onClose} aria-label="ปิด">✕</button>
+            <div className="qr-payment-modal" onClick={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="qr-payment-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                            width: '36px', height: '36px', borderRadius: 'var(--radius-md)',
+                            background: 'var(--accent-sport)', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '1.1rem'
+                        }}>💳</div>
+                        <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>ชำระเงิน</h3>
+                    </div>
+                    <button onClick={onClose} className="qr-payment-close" aria-label="ปิด">✕</button>
                 </div>
-                <div className="modal-body">
-                    {/* Timer */}
+
+                {/* Timer - Gold gradient bar */}
+                <div style={{
+                    margin: '0 1.5rem',
+                    padding: '0.85rem 1.25rem',
+                    background: isUrgent
+                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.08))'
+                        : 'linear-gradient(135deg, rgba(255, 159, 28, 0.2), rgba(255, 159, 28, 0.05))',
+                    borderRadius: 'var(--radius-lg)',
+                    textAlign: 'center',
+                    border: isUrgent
+                        ? '1px solid rgba(239, 68, 68, 0.2)'
+                        : '1px solid rgba(255, 159, 28, 0.15)'
+                }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                        กรุณาชำระภายใน
+                    </div>
                     <div style={{
-                        padding: '0.75rem 1rem',
-                        background: isUrgent ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                        borderRadius: 'var(--radius-lg)',
-                        marginBottom: '1.5rem'
+                        fontSize: '2.75rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-numbers)',
+                        color: isUrgent ? 'var(--danger-400)' : 'var(--accent-sport)',
+                        lineHeight: 1.1,
+                        letterSpacing: '0.05em'
                     }}>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>กรุณาชำระภายใน</div>
-                        <div style={{ fontSize: '2rem', fontWeight: '700', color: isUrgent ? 'var(--danger-400)' : 'var(--warning-400)' }}>
-                            {formatTime(timeLeft)}
-                        </div>
+                        {formatTime(timeLeft)}
                     </div>
+                </div>
 
-                    {/* Amount */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>ยอดชำระ</div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: '700', color: 'var(--primary-400)' }}>
-                            ฿{formatPrice(amount)}
-                        </div>
+                {/* Amount */}
+                <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>ยอดชำระ</div>
+                    <div style={{
+                        fontSize: '2rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-numbers)',
+                        color: 'var(--accent-sport)',
+                        letterSpacing: '0.02em'
+                    }}>
+                        ฿{formatPrice(amount)}
                     </div>
+                </div>
 
-                    {/* QR Code */}
+                {/* QR Code */}
+                <div style={{ textAlign: 'center', margin: '1.25rem 0' }}>
                     {(settings.customQRImage || qrDataUrl) ? (
-                        <div style={{ background: 'white', padding: '1rem', borderRadius: 'var(--radius-lg)', display: 'inline-block' }}>
-                            <img src={settings.customQRImage || qrDataUrl} alt="PromptPay QR" style={{ width: '180px', height: '180px', objectFit: 'contain' }} />
+                        <div style={{
+                            background: 'white',
+                            padding: '1rem',
+                            borderRadius: 'var(--radius-lg)',
+                            display: 'inline-block',
+                            boxShadow: '0 4px 24px rgba(0,0,0,0.2)'
+                        }}>
+                            <img src={settings.customQRImage || qrDataUrl} alt="PromptPay QR" style={{ width: '200px', height: '200px', objectFit: 'contain' }} />
                         </div>
                     ) : (
-                        <div style={{ padding: '2rem', color: 'var(--text-muted)' }}>กำลังสร้าง QR Code...</div>
-                    )}
-
-                    {/* PromptPay Info */}
-                    <div style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                        <div><strong>PromptPay:</strong> {settings.promptPayNumber}</div>
-                        <div><strong>ชื่อ:</strong> {settings.promptPayName}</div>
-                    </div>
-
-                    {/* Slip Upload Section */}
-                    <div style={{
-                        marginTop: '1.5rem',
-                        padding: '1rem',
-                        background: 'var(--bg-glass)',
-                        borderRadius: 'var(--radius-lg)'
-                    }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
-                            📎 แนบสลิปการโอน
-                        </div>
-
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            style={{ display: 'none' }}
-                        />
-
-                        {slipPreview ? (
-                            <div>
-                                <img
-                                    src={slipPreview}
-                                    alt="สลิป"
-                                    style={{
-                                        maxWidth: '100%',
-                                        maxHeight: '150px',
-                                        borderRadius: '8px',
-                                        marginBottom: '0.5rem'
-                                    }}
-                                />
-                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                    <button
-                                        className="btn btn-sm btn-secondary"
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        เปลี่ยนรูป
-                                    </button>
-                                    <span style={{ color: 'var(--success-400)', fontSize: '0.75rem', alignSelf: 'center' }}>
-                                        ✓ อัพโหลดแล้ว
-                                    </span>
-                                </div>
-                            </div>
-                        ) : (
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={uploading}
-                                style={{ width: '100%' }}
-                            >
-                                {uploading ? '⏳ กำลังอัพโหลด...' : '📷 เลือกรูปสลิป'}
-                            </button>
-                        )}
-
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            รองรับไฟล์ภาพ (JPG, PNG) ขนาดไม่เกิน 5MB — จะถูกบีบอัดอัตโนมัติ
-                        </p>
-                    </div>
-
-                    {/* Booking Info */}
-                    {booking && (
-                        <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            รหัสการจอง: {booking.id?.slice(-8)}
+                        <div style={{ padding: '3rem', color: 'var(--text-muted)' }}>
+                            <div className="spinner" style={{ margin: '0 auto 0.5rem' }}></div>
+                            กำลังสร้าง QR Code...
                         </div>
                     )}
                 </div>
-                <div className="modal-footer" style={{ flexDirection: 'column', gap: '0.75rem' }}>
+
+                {/* PromptPay Info */}
+                <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontWeight: 600 }}>PromptPay: {settings.promptPayNumber}</div>
+                    <div>ชื่อ: {settings.promptPayName}</div>
+                </div>
+
+                {/* Slip Upload Section */}
+                <div style={{
+                    margin: '1.25rem 1.5rem 0',
+                    padding: '1.25rem',
+                    background: 'var(--bg-card)',
+                    borderRadius: 'var(--radius-xl)',
+                    border: '1px solid var(--border-color)'
+                }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.85rem', textAlign: 'center' }}>
+                        📎 แนบสลิปการโอน
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                    />
+
+                    {slipPreview ? (
+                        <div style={{ textAlign: 'center' }}>
+                            <img
+                                src={slipPreview}
+                                alt="สลิป"
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '140px',
+                                    borderRadius: 'var(--radius-md)',
+                                    marginBottom: '0.5rem',
+                                    border: '1px solid var(--border-color)'
+                                }}
+                            />
+                            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
+                                <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    เปลี่ยนรูป
+                                </button>
+                                <span style={{ color: 'var(--success-400)', fontSize: '0.8rem' }}>✓ อัพโหลดแล้ว</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploading}
+                            style={{
+                                width: '100%',
+                                padding: '0.85rem',
+                                fontSize: '0.95rem',
+                                fontWeight: 700,
+                                border: 'none',
+                                borderRadius: 'var(--radius-lg)',
+                                cursor: uploading ? 'wait' : 'pointer',
+                                background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-sport))',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                transition: 'opacity 0.2s',
+                                boxShadow: '0 4px 16px rgba(255, 159, 28, 0.25)'
+                            }}
+                        >
+                            {uploading ? '⏳ กำลังอัพโหลด...' : '📷 เลือกรูปสลิป'}
+                        </button>
+                    )}
+
+                    <p style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        textAlign: 'center',
+                        marginTop: '0.6rem',
+                        marginBottom: 0
+                    }}>
+                        รองรับไฟล์ภาพ (JPG, PNG) ขนาดไม่เกิน 5MB — จะถูกบีบอัดอัตโนมัติ
+                    </p>
+                </div>
+
+                {/* Booking ID */}
+                {booking && (
+                    <div style={{
+                        textAlign: 'center',
+                        fontSize: '0.75rem',
+                        color: 'var(--accent-sport)',
+                        marginTop: '0.75rem'
+                    }}>
+                        รหัสการจอง: {booking.id?.slice(-8)}
+                    </div>
+                )}
+
+                {/* Footer */}
+                <div style={{
+                    padding: '1rem 1.5rem 1.5rem',
+                    textAlign: 'center'
+                }}>
                     {slipPreview && (
                         <button
-                            className="btn btn-primary"
+                            className="btn btn-primary btn-glow"
                             onClick={onClose}
-                            style={{ width: '100%' }}
+                            style={{ width: '100%', marginBottom: '0.5rem' }}
                         >
                             ✓ เสร็จสิ้น
                         </button>

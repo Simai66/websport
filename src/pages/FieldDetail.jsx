@@ -50,28 +50,20 @@ export default function FieldDetail() {
 
     const handleSlotClick = (slot) => {
         if (isSlotBooked(field.id, selectedDate, slot)) return;
-
         const slotIndex = timeSlots.indexOf(slot);
-
         if (selectedSlots.includes(slot)) {
-            // Deselect: only allow if it's at the edge
             const selectedIndices = selectedSlots.map(s => timeSlots.indexOf(s)).sort((a, b) => a - b);
             if (slotIndex === selectedIndices[0] || slotIndex === selectedIndices[selectedIndices.length - 1]) {
                 setSelectedSlots(prev => prev.filter(s => s !== slot));
             }
         } else {
             if (selectedSlots.length === 0) {
-                // First selection
                 setSelectedSlots([slot]);
             } else if (selectedSlots.length < maxSlots) {
-                // Check if consecutive
                 const selectedIndices = selectedSlots.map(s => timeSlots.indexOf(s)).sort((a, b) => a - b);
                 const minIndex = selectedIndices[0];
                 const maxIndex = selectedIndices[selectedIndices.length - 1];
-
-                // Allow only if adjacent to current selection
                 if (slotIndex === minIndex - 1 || slotIndex === maxIndex + 1) {
-                    // Check if all slots in between are available
                     const newMin = Math.min(minIndex, slotIndex);
                     const newMax = Math.max(maxIndex, slotIndex);
                     let allAvailable = true;
@@ -96,13 +88,9 @@ export default function FieldDetail() {
         if (selectedSlots.length === 0) return true;
         if (selectedSlots.includes(slot)) return true;
         if (selectedSlots.length >= maxSlots) return false;
-
         const slotIndex = timeSlots.indexOf(slot);
         const selectedIndices = selectedSlots.map(s => timeSlots.indexOf(s)).sort((a, b) => a - b);
-        const minIndex = selectedIndices[0];
-        const maxIndex = selectedIndices[selectedIndices.length - 1];
-
-        return slotIndex === minIndex - 1 || slotIndex === maxIndex + 1;
+        return slotIndex === selectedIndices[0] - 1 || slotIndex === selectedIndices[selectedIndices.length - 1] + 1;
     };
 
     const totalPrice = selectedSlots.length * field.price;
@@ -114,15 +102,12 @@ export default function FieldDetail() {
             setShowToast(true);
             return;
         }
-
         if (!customerName.trim() || !customerPhone.trim()) {
             setToastMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
             setToastType('error');
             setShowToast(true);
             return;
         }
-
-        // Check all slots are still available
         for (const slot of selectedSlots) {
             if (isSlotBooked(field.id, selectedDate, slot)) {
                 setToastMessage('บางช่วงเวลาถูกจองไปแล้ว กรุณาเลือกใหม่');
@@ -132,7 +117,6 @@ export default function FieldDetail() {
                 return;
             }
         }
-
         const booking = addBooking({
             fieldId: field.id,
             fieldName: field.name,
@@ -145,10 +129,8 @@ export default function FieldDetail() {
             price: field.price,
             totalPrice: totalPrice
         });
-
         setCurrentBooking(booking);
         setShowQR(true);
-
         setToastMessage('จองสำเร็จ! กรุณาชำระเงินภายในเวลาที่กำหนด');
         setToastType('success');
         setShowToast(true);
@@ -170,75 +152,114 @@ export default function FieldDetail() {
         setSelectedSlots([]);
     };
 
+    const facilityIcons = {
+        'ห้องน้ำ': '🚿',
+        'ที่จอดรถ': '🅿️',
+        'ไฟส่องสว่าง': '✨',
+        'ห้องแต่งตัว': '👔',
+        'Wifi ฟรี': '📶',
+        'น้ำดื่มฟรี': '💧'
+    };
 
+    const getFacilityIcon = (facility) => facilityIcons[facility] || '✓';
 
     return (
         <div>
-            <div className="page-header">
+            {/* Page Header */}
+            <div className="page-header" style={{ paddingBottom: '1.5rem' }}>
                 <div className="container page-header-content">
-                    <h1 className="page-title">{field.name}</h1>
-                    <p className="page-description">{typeLabels[field.type]}</p>
+                    <h1 className="page-title" style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', letterSpacing: '0.02em' }}>{field.name}</h1>
+                    <p className="page-description" style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{typeLabels[field.type]}</p>
                 </div>
             </div>
 
-            <section className="section">
+            <section className="section" style={{ paddingTop: '2rem' }}>
                 <div className="container">
                     <div className="field-detail-layout">
                         {/* Left Column - Field Info */}
                         <div>
-                            <div className="field-gallery">
+                            <div className="field-gallery" style={{ borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
                                 <img src={field.image} alt={field.name} />
                             </div>
 
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <h2 style={{ marginBottom: '1rem' }}>รายละเอียดสนาม</h2>
-                                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                            <div style={{ marginTop: '2rem' }}>
+                                {/* Section title with orange accent */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                                    <div style={{ width: '4px', height: '28px', background: 'var(--accent-sport)', borderRadius: '2px' }}></div>
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>รายละเอียดสนาม</h2>
+                                </div>
+                                <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '1.5rem', fontSize: '0.95rem' }}>
                                     {field.description}
                                 </p>
 
-                                <h3 style={{ marginBottom: '0.75rem', fontSize: '1rem' }}>สิ่งอำนวยความสะดวก</h3>
-                                <div className="field-facilities">
+                                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.75rem' }}>สิ่งอำนวยความสะดวก</h3>
+                                <div className="field-facilities" style={{ gap: '0.6rem' }}>
                                     {field.facilities && Array.isArray(field.facilities) ? field.facilities.map((facility, index) => (
-                                        <span key={index} className="field-facility">
-                                            ✓ {facility}
+                                        <span key={index} className="field-facility" style={{
+                                            background: 'var(--bg-card)',
+                                            border: '1px solid var(--border-color)',
+                                            padding: '0.45rem 0.85rem',
+                                            borderRadius: 'var(--radius-full)',
+                                            fontSize: '0.8rem',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem'
+                                        }}>
+                                            {getFacilityIcon(facility)} {facility}
                                         </span>
-                                    )) : <span style={{ color: 'var(--text-muted)' }}>ไม่มีข้อมูลสิ่งอำนวยความสะดวก</span>}
+                                    )) : <span style={{ color: 'var(--text-muted)' }}>ไม่มีข้อมูล</span>}
                                 </div>
 
+                                {/* Price bar */}
                                 <div style={{
-                                    padding: '1rem',
-                                    background: 'var(--bg-glass)',
-                                    borderRadius: 'var(--radius-lg)',
-                                    marginTop: '1rem'
+                                    padding: '1rem 1.25rem',
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-xl)',
+                                    marginTop: '1.5rem',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
                                 }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>ราคา:</span>
-                                    <span style={{
-                                        fontSize: '1.5rem',
-                                        fontWeight: '700',
-                                        color: 'var(--primary-400)',
-                                        marginLeft: '0.5rem'
-                                    }}>
-                                        ฿{formatPrice(field.price)}
-                                    </span>
-                                    <span style={{ color: 'var(--text-muted)', marginLeft: '0.25rem' }}>/ชั่วโมง</span>
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>ราคาต่อบริการ</span>
+                                    <div>
+                                        <span style={{
+                                            fontSize: '1.75rem',
+                                            fontWeight: 700,
+                                            fontFamily: 'var(--font-numbers)',
+                                            color: 'var(--accent-sport)'
+                                        }}>
+                                            ฿{formatPrice(field.price)}
+                                        </span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: '0.25rem' }}>/ชั่วโมง</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Column - Booking */}
-                        <div className="booking-sidebar">
-                            <h2 className="booking-sidebar-title">จองสนาม</h2>
+                        {/* Right Column - Booking Sidebar */}
+                        <div className="booking-sidebar" style={{
+                            background: 'var(--bg-card)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: 'var(--radius-xl)',
+                            padding: '1.5rem'
+                        }}>
+                            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>จองสนาม</h2>
 
-                            {/* Info */}
+                            {/* Info pill */}
                             <div style={{
-                                padding: '0.75rem',
-                                background: 'rgba(99, 102, 241, 0.1)',
-                                borderRadius: 'var(--radius-md)',
-                                marginBottom: '1rem',
-                                fontSize: '0.875rem',
-                                color: 'var(--primary-400)'
+                                padding: '0.65rem 1rem',
+                                background: 'rgba(255, 107, 53, 0.08)',
+                                border: '1px solid rgba(255, 107, 53, 0.15)',
+                                borderRadius: 'var(--radius-lg)',
+                                marginBottom: '1.25rem',
+                                fontSize: '0.85rem',
+                                color: 'var(--accent-sport)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem'
                             }}>
-                                💡 เลือกได้สูงสุด {maxSlots} ชั่วโมงติดต่อกัน
+                                📍 เลือกได้สูงสุด {maxSlots} ชั่วโมงติดต่อกัน
                             </div>
 
                             {/* Calendar */}
@@ -256,11 +277,11 @@ export default function FieldDetail() {
                             {/* Time Slots */}
                             {selectedDate && (
                                 <div style={{ marginBottom: '1.5rem' }}>
-                                    <label className="form-label">
+                                    <label className="form-label" style={{ marginBottom: '0.75rem' }}>
                                         เลือกเวลา ({formatDateThai(selectedDate)})
                                         {selectedSlots.length > 0 && (
-                                            <span style={{ color: 'var(--primary-400)', marginLeft: '0.5rem' }}>
-                                                - เลือกแล้ว {selectedSlots.length} ชม.
+                                            <span style={{ color: 'var(--accent-sport)', marginLeft: '0.5rem', fontWeight: 600 }}>
+                                                — เลือกแล้ว {selectedSlots.length} ชม.
                                             </span>
                                         )}
                                     </label>
@@ -269,7 +290,6 @@ export default function FieldDetail() {
                                             const booked = isSlotBooked(field.id, selectedDate, slot);
                                             const selected = selectedSlots.includes(slot);
                                             const canSelect = canSelectSlot(slot);
-
                                             return (
                                                 <button
                                                     key={slot}
@@ -277,7 +297,7 @@ export default function FieldDetail() {
                                                     onClick={() => handleSlotClick(slot)}
                                                     disabled={booked}
                                                     style={{
-                                                        opacity: !booked && !selected && !canSelect ? 0.5 : 1,
+                                                        opacity: !booked && !selected && !canSelect ? 0.4 : 1,
                                                         cursor: booked ? 'not-allowed' : canSelect || selected ? 'pointer' : 'default'
                                                     }}
                                                 >
@@ -303,9 +323,9 @@ export default function FieldDetail() {
                                             placeholder="กรอกชื่อ-นามสกุล"
                                             value={customerName}
                                             onChange={(e) => setCustomerName(e.target.value)}
+                                            style={{ background: 'var(--bg-secondary)' }}
                                         />
                                     </div>
-
                                     <div className="form-group">
                                         <label className="form-label">เบอร์โทรศัพท์</label>
                                         <input
@@ -314,47 +334,44 @@ export default function FieldDetail() {
                                             placeholder="0xx-xxx-xxxx"
                                             value={customerPhone}
                                             onChange={(e) => setCustomerPhone(e.target.value)}
+                                            style={{ background: 'var(--bg-secondary)' }}
                                         />
                                     </div>
 
                                     {/* Summary */}
-                                    <div className="booking-summary">
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">สนาม</span>
-                                            <span className="booking-summary-value">{field.name}</span>
-                                        </div>
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">วันที่</span>
-                                            <span className="booking-summary-value">{formatDateThai(selectedDate)}</span>
-                                        </div>
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">เวลา</span>
-                                            <span className="booking-summary-value">
-                                                {selectedSlots[0]} - {selectedSlots[selectedSlots.length - 1].split('-')[1]}
-                                            </span>
-                                        </div>
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">จำนวน</span>
-                                            <span className="booking-summary-value">{selectedSlots.length} ชั่วโมง</span>
-                                        </div>
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">ราคาต่อชม.</span>
-                                            <span className="booking-summary-value">฿{formatPrice(field.price)}</span>
-                                        </div>
-                                        <div className="booking-summary-row">
-                                            <span className="booking-summary-label">รวมทั้งสิ้น</span>
-                                            <span className="booking-summary-value booking-summary-total">
-                                                ฿{formatPrice(totalPrice)}
-                                            </span>
-                                        </div>
+                                    <div style={{
+                                        padding: '1rem 1.25rem',
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        marginBottom: '1rem',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>รวมทั้งหมด</span>
+                                        <span style={{
+                                            fontSize: '1.75rem',
+                                            fontWeight: 700,
+                                            fontFamily: 'var(--font-numbers)',
+                                            color: 'var(--text-primary)'
+                                        }}>
+                                            ฿{formatPrice(totalPrice)}
+                                        </span>
                                     </div>
 
                                     <button
-                                        className="btn btn-primary btn-lg"
-                                        style={{ width: '100%' }}
+                                        className="btn btn-lg btn-glow"
+                                        style={{
+                                            width: '100%',
+                                            background: 'var(--accent-sport)',
+                                            color: 'white',
+                                            fontSize: '1rem',
+                                            fontWeight: 700,
+                                            boxShadow: '0 4px 20px rgba(255, 107, 53, 0.35)'
+                                        }}
                                         onClick={handleBooking}
                                     >
-                                        จองและชำระเงิน
+                                        ดำเนินการต่อ →
                                     </button>
 
                                     <p style={{
@@ -369,7 +386,7 @@ export default function FieldDetail() {
                             )}
 
                             {!selectedDate && (
-                                <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>
+                                <p style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.9rem' }}>
                                     กรุณาเลือกวันที่เพื่อดูช่วงเวลาว่าง
                                 </p>
                             )}
@@ -378,7 +395,6 @@ export default function FieldDetail() {
                 </div>
             </section>
 
-            {/* QR Payment Modal */}
             {showQR && currentBooking && (
                 <QRPayment
                     amount={totalPrice}
@@ -388,7 +404,6 @@ export default function FieldDetail() {
                 />
             )}
 
-            {/* Toast */}
             {showToast && (
                 <div className="toast-container">
                     <Toast
