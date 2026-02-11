@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getBookings, formatPrice } from '../../data';
+import StatusBadge from '../../components/StatusBadge';
 
 export default function Overview() {
     const [stats, setStats] = useState({
@@ -31,15 +32,7 @@ export default function Overview() {
         return () => clearInterval(interval);
     }, []);
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'confirmed': return <span className="badge badge-success">✓ ชำระแล้ว</span>;
-            case 'pending': return <span className="badge badge-warning">⏳ รอชำระ</span>;
-            case 'cancelled': return <span className="badge badge-danger">✕ ยกเลิก</span>;
-            case 'expired': return <span className="badge badge-danger">⏱ หมดเวลา</span>;
-            default: return <span className="badge">{status}</span>;
-        }
-    };
+
 
     return (
         <div>
@@ -89,7 +82,7 @@ export default function Overview() {
                                     <td style={{ padding: '1rem' }}>{b.date}</td>
                                     <td style={{ padding: '1rem' }}>{b.timeSlot}</td>
                                     <td style={{ padding: '1rem' }}>฿{formatPrice(b.totalPrice || b.price)}</td>
-                                    <td style={{ padding: '1rem' }}>{getStatusBadge(b.status)}</td>
+                                    <td style={{ padding: '1rem' }}><StatusBadge status={b.status} /></td>
                                 </tr>
                             ))}
                             {recentBookings.length === 0 && (

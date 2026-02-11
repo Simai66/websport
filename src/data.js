@@ -121,6 +121,14 @@ export const fieldTypes = [
     { id: 'tennis', name: 'เทนนิส' }
 ];
 
+// Type label lookup (for FieldCard, FieldDetail, etc.)
+export const typeLabels = {
+    football: 'ฟุตบอล',
+    badminton: 'แบดมินตัน',
+    basketball: 'บาสเกตบอล',
+    tennis: 'เทนนิส'
+};
+
 // Time slots
 export const timeSlots = [
     '08:00-09:00',

@@ -10,6 +10,7 @@ export default function DashboardLayout() {
         { path: '/dashboard', label: 'ภาพรวม', icon: '📊' },
         { path: '/dashboard/bookings', label: 'จัดการการจอง', icon: '📅' },
         { path: '/dashboard/schedule', label: 'ตารางสนาม', icon: '🏟️' },
+        { path: '/dashboard/fields', label: 'จัดการสนาม', icon: '⚽' },
         { path: '/dashboard/settings', label: 'ตั้งค่า', icon: '⚙️' },
     ];
 

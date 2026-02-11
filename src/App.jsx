@@ -13,7 +13,9 @@ import Login from './pages/Login';
 // Dashboard Features
 import Overview from './features/dashboard/Overview';
 import Bookings from './features/dashboard/Bookings';
+import BookingDetail from './features/dashboard/BookingDetail';
 import Fields from './features/dashboard/Fields';
+import Schedule from './features/dashboard/Schedule';
 import SettingsPage from './features/dashboard/Settings';
 
 import './index.css';
@@ -41,7 +43,8 @@ function App() {
           }>
             <Route index element={<Overview />} />
             <Route path="bookings" element={<Bookings />} />
-            <Route path="schedule" element={<div style={{ padding: '2rem', color: 'var(--text-muted)' }}>Coming Soon</div>} />
+            <Route path="bookings/:id" element={<BookingDetail />} />
+            <Route path="schedule" element={<Schedule />} />
             <Route path="fields" element={<Fields />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Toast from '../components/Toast';
 import QRPayment from '../components/QRPayment';
+import StatusBadge from '../components/StatusBadge';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { getBookings, cancelBooking, expireOverdueBookings, formatDateThai, formatPrice } from '../data';
 
 export default function MyBookings() {
@@ -12,6 +14,7 @@ export default function MyBookings() {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
     const [showQR, setShowQR] = useState(null);
+    const [confirmState, setConfirmState] = useState({ isOpen: false, bookingId: null });
 
     const handleSearch = () => {
         if (!phone.trim()) {
@@ -29,28 +32,16 @@ export default function MyBookings() {
     };
 
     const handleCancel = (bookingId) => {
-        if (confirm('คุณต้องการยกเลิกการจองนี้หรือไม่?')) {
-            cancelBooking(bookingId);
-            setToastMessage('ยกเลิกการจองเรียบร้อยแล้ว');
-            setToastType('success');
-            setShowToast(true);
-            handleSearch();
-        }
+        setConfirmState({ isOpen: true, bookingId });
     };
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'confirmed':
-                return <span className="badge badge-success">✓ ชำระแล้ว</span>;
-            case 'pending':
-                return <span className="badge badge-warning">⏳ รอชำระเงิน</span>;
-            case 'cancelled':
-                return <span className="badge badge-danger">✕ ยกเลิกแล้ว</span>;
-            case 'expired':
-                return <span className="badge badge-danger">⏱ หมดเวลา</span>;
-            default:
-                return <span className="badge">{status}</span>;
-        }
+    const confirmCancel = () => {
+        cancelBooking(confirmState.bookingId);
+        setConfirmState({ isOpen: false, bookingId: null });
+        setToastMessage('ยกเลิกการจองเรียบร้อยแล้ว');
+        setToastType('success');
+        setShowToast(true);
+        handleSearch();
     };
 
     const canCancel = (booking) => {
@@ -100,7 +91,7 @@ export default function MyBookings() {
                                 placeholder="กรอกเบอร์โทรศัพท์"
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             />
                         </div>
                         <button
@@ -108,7 +99,7 @@ export default function MyBookings() {
                             style={{ width: '100%' }}
                             onClick={handleSearch}
                         >
-                            ค้นหา
+                            🔍 ค้นหา
                         </button>
                     </div>
 
@@ -120,12 +111,12 @@ export default function MyBookings() {
                                     {bookings.map(booking => (
                                         <div key={booking.id} className="booking-item">
                                             <div className="booking-item-image">
-                                                <img src={booking.fieldImage} alt={booking.fieldName} />
+                                                <img src={booking.fieldImage} alt={booking.fieldName} width="120" height="80" />
                                             </div>
                                             <div className="booking-item-content">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                                                     <h3 className="booking-item-title">{booking.fieldName}</h3>
-                                                    {getStatusBadge(booking.status)}
+                                                    <StatusBadge status={booking.status} />
                                                 </div>
                                                 <div className="booking-item-details">
                                                     <span className="booking-item-detail">📅 {formatDateThai(booking.date)}</span>
@@ -217,6 +208,16 @@ export default function MyBookings() {
                     }}
                 />
             )}
+
+            {/* Confirm Dialog */}
+            <ConfirmDialog
+                isOpen={confirmState.isOpen}
+                title="ยกเลิกการจอง"
+                message="คุณต้องการยกเลิกการจองนี้หรือไม่? การยกเลิกไม่สามารถเรียกคืนได้"
+                confirmLabel="ยกเลิกการจอง"
+                onConfirm={confirmCancel}
+                onCancel={() => setConfirmState({ isOpen: false, bookingId: null })}
+            />
 
             {/* Toast */}
             {showToast && (

@@ -1,11 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import generatePayload from 'promptpay-qr';
-import QRCode from 'qrcode';
-import { getSettings, uploadPaymentSlip, getBookings } from '../data';
+import { getSettings, uploadPaymentSlip, getBookings, formatPrice } from '../data';
+
+// Compress image before storing to avoid localStorage overflow
+function compressImage(dataUrl, maxWidth = 600, quality = 0.6) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ratio = Math.min(maxWidth / img.width, 1);
+            canvas.width = img.width * ratio;
+            canvas.height = img.height * ratio;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(dataUrl); // Fallback to original
+        img.src = dataUrl;
+    });
+}
 
 export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipUploaded }) {
-    const navigate = useNavigate();
     const [qrDataUrl, setQrDataUrl] = useState('');
     const [timeLeft, setTimeLeft] = useState(null);
     const [slipPreview, setSlipPreview] = useState(null);
@@ -13,6 +27,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
     const settings = getSettings();
     const timerRef = useRef(null);
     const fileInputRef = useRef(null);
+    const timerInitialized = useRef(false);
 
     // Load fresh booking data with slip from localStorage
     useEffect(() => {
@@ -25,11 +40,28 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         }
     }, [booking?.id]);
 
+    // Generate QR code
     useEffect(() => {
-        const payload = generatePayload(settings.promptPayNumber, { amount });
-        QRCode.toDataURL(payload, { width: 300, margin: 2 })
-            .then(url => setQrDataUrl(url))
-            .catch(err => console.error(err));
+        let cancelled = false;
+        async function generateQR() {
+            try {
+                const { default: generatePayload } = await import('promptpay-qr');
+                const { default: QRCode } = await import('qrcode');
+                const payload = generatePayload(settings.promptPayNumber, { amount });
+                const url = await QRCode.toDataURL(payload, { width: 300, margin: 2 });
+                if (!cancelled) setQrDataUrl(url);
+            } catch (err) {
+                console.error('QR generation error:', err);
+            }
+        }
+        generateQR();
+        return () => { cancelled = true; };
+    }, [amount, settings.promptPayNumber]);
+
+    // Initialize timer ONCE
+    useEffect(() => {
+        if (timerInitialized.current) return;
+        timerInitialized.current = true;
 
         let initialTime;
         if (booking?.paymentDeadline) {
@@ -40,12 +72,12 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
             initialTime = settings.bookingTimeoutMinutes * 60;
         }
         setTimeLeft(initialTime);
-    }, [amount, settings.promptPayNumber, booking, settings.bookingTimeoutMinutes]);
+    }, [booking?.paymentDeadline, settings.bookingTimeoutMinutes]);
 
+    // Countdown timer
     useEffect(() => {
-        if (timeLeft === null) return;
-        if (timeLeft <= 0) {
-            if (onTimeout) onTimeout();
+        if (timeLeft === null || timeLeft <= 0) {
+            if (timeLeft === 0 && onTimeout) onTimeout();
             return;
         }
         timerRef.current = setInterval(() => {
@@ -59,7 +91,8 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
             });
         }, 1000);
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [timeLeft === null]);
+    }, [timeLeft === null]); // eslint-disable-line react-hooks/exhaustive-deps
+    // NOTE: we intentionally only re-run when timeLeft transitions from null → number
 
     const formatTime = (seconds) => {
         if (seconds === null) return '--:--';
@@ -68,9 +101,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const formatPrice = (price) => new Intl.NumberFormat('th-TH').format(price);
-
-    const handleFileSelect = (e) => {
+    const handleFileSelect = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -81,13 +112,18 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
 
         setUploading(true);
         const reader = new FileReader();
-        reader.onload = (event) => {
-            const slipData = event.target.result;
-            setSlipPreview(slipData);
+        reader.onload = async (event) => {
+            try {
+                // Compress to prevent localStorage overflow
+                const compressed = await compressImage(event.target.result);
+                setSlipPreview(compressed);
 
-            if (booking?.id) {
-                uploadPaymentSlip(booking.id, slipData);
-                if (onSlipUploaded) onSlipUploaded(slipData);
+                if (booking?.id) {
+                    uploadPaymentSlip(booking.id, compressed);
+                    if (onSlipUploaded) onSlipUploaded(compressed);
+                }
+            } catch {
+                setSlipPreview(event.target.result);
             }
             setUploading(false);
         };
@@ -97,11 +133,11 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
     const isUrgent = timeLeft !== null && timeLeft < 120;
 
     return (
-        <div className="modal-overlay active" onClick={onClose}>
+        <div className="modal-overlay active" onClick={onClose} role="dialog" aria-modal="true" aria-label="ชำระเงิน">
             <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center' }}>
                 <div className="modal-header">
                     <h3 className="modal-title">💳 ชำระเงิน</h3>
-                    <button className="modal-close" onClick={onClose}>✕</button>
+                    <button className="modal-close" onClick={onClose} aria-label="ปิด">✕</button>
                 </div>
                 <div className="modal-body">
                     {/* Timer */}
@@ -195,7 +231,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                         )}
 
                         <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            รองรับไฟล์ภาพ (JPG, PNG) ขนาดไม่เกิน 5MB
+                            รองรับไฟล์ภาพ (JPG, PNG) ขนาดไม่เกิน 5MB — จะถูกบีบอัดอัตโนมัติ
                         </p>
                     </div>
 

@@ -1,15 +1,65 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import FieldCard from '../components/FieldCard';
-import { getFields, fieldTypes } from '../data';
+import { getFields, getBookings, fieldTypes } from '../data';
+
+// Animated counter component
+function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
+    const [count, setCount] = useState(0);
+    const [started, setStarted] = useState(false);
+    const containerRef = useRef(null);
+
+    const observerCallback = useCallback(([entry]) => {
+        if (entry.isIntersecting) setStarted(true);
+    }, []);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(observerCallback, { threshold: 0.3 });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [observerCallback]);
+
+    useEffect(() => {
+        if (!started) return;
+        let startTime;
+        const animate = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            setCount(Math.floor(progress * end));
+            if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+    }, [started, end, duration]);
+
+    return <span ref={containerRef}>{count}{suffix}</span>;
+}
+
+const typeIcons = {
+    all: '🏟️',
+    football: '⚽',
+    badminton: '🏸',
+    basketball: '🏀',
+    tennis: '🎾'
+};
 
 export default function Home() {
     const [activeFilter, setActiveFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [fields, setFields] = useState([]);
+    const [liveStats, setLiveStats] = useState({ fields: 0, bookings: 0, confirmed: 0 });
 
     useEffect(() => {
-        setFields(getFields());
+        const loadedFields = getFields();
+        setFields(loadedFields);
+        const bookings = getBookings();
+        const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+        setLiveStats({
+            fields: loadedFields.length,
+            bookings: bookings.length,
+            confirmed
+        });
     }, []);
 
     const filteredFields = fields.filter(field => {
@@ -66,16 +116,16 @@ export default function Home() {
                                 background: 'var(--accent-sport)',
                                 boxShadow: '0 0 30px var(--accent-sport-glow)'
                             }}>
-                                เริ่มจองเลย
+                                ⚡ เริ่มจองเลย
                             </a>
                             <Link to="/my-bookings" className="btn btn-lg btn-secondary" style={{
                                 border: '1px solid var(--border-color-strong)'
                             }}>
-                                ดูสนามทั้งหมด →
+                                📋 เช็คการจอง
                             </Link>
                         </div>
 
-                        {/* Stats Bar */}
+                        {/* Live Stats Bar */}
                         <div className="animate-slide-up animate-delay-4" style={{
                             marginTop: '3rem',
                             paddingTop: '2rem',
@@ -86,17 +136,73 @@ export default function Home() {
                             flexWrap: 'wrap'
                         }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-sport)' }}>50+</div>
+                                <div style={{
+                                    fontSize: '2rem',
+                                    fontWeight: 700,
+                                    color: 'var(--accent-sport)',
+                                    fontFamily: 'var(--font-numbers)'
+                                }}>
+                                    <AnimatedCounter end={liveStats.fields} duration={1500} suffix="+" />
+                                </div>
                                 <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>สนามกีฬา</div>
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-gold)' }}>10K+</div>
-                                <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>ผู้ใช้งาน</div>
+                                <div style={{
+                                    fontSize: '2rem',
+                                    fontWeight: 700,
+                                    color: 'var(--accent-gold)',
+                                    fontFamily: 'var(--font-numbers)'
+                                }}>
+                                    <AnimatedCounter end={liveStats.bookings || 50} duration={2000} suffix="+" />
+                                </div>
+                                <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>การจองสำเร็จ</div>
                             </div>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)' }}>⭐ 4.9</div>
+                                <div style={{
+                                    fontSize: '2rem',
+                                    fontWeight: 700,
+                                    color: 'var(--text-primary)',
+                                    fontFamily: 'var(--font-numbers)'
+                                }}>
+                                    ⭐ 4.9
+                                </div>
                                 <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>คะแนนรีวิว</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works */}
+            <section className="section" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
+                <div className="container">
+                    <h2 className="section-title">จองง่ายใน 3 ขั้นตอน</h2>
+                    <p className="section-description">ไม่ต้องโทร ไม่ต้องรอ จองออนไลน์ได้ตลอด 24 ชั่วโมง</p>
+
+                    <div className="how-it-works-grid">
+                        <div className="how-it-works-step">
+                            <div className="how-it-works-number">1</div>
+                            <div className="how-it-works-icon">🏟️</div>
+                            <h3 className="how-it-works-title">เลือกสนาม</h3>
+                            <p className="how-it-works-desc">เลือกสนามกีฬาที่ต้องการ พร้อมดูรายละเอียดและสิ่งอำนวยความสะดวก</p>
+                        </div>
+                        <div className="how-it-works-connector">
+                            <span>→</span>
+                        </div>
+                        <div className="how-it-works-step">
+                            <div className="how-it-works-number">2</div>
+                            <div className="how-it-works-icon">📅</div>
+                            <h3 className="how-it-works-title">เลือกวันเวลา</h3>
+                            <p className="how-it-works-desc">ดูตารางเวลาว่าง เลือกวันที่และช่วงเวลาที่สะดวก</p>
+                        </div>
+                        <div className="how-it-works-connector">
+                            <span>→</span>
+                        </div>
+                        <div className="how-it-works-step">
+                            <div className="how-it-works-number">3</div>
+                            <div className="how-it-works-icon">💳</div>
+                            <h3 className="how-it-works-title">ชำระเงิน</h3>
+                            <p className="how-it-works-desc">สแกน QR Code PromptPay ชำระเงินง่ายๆ รับยืนยันทันที</p>
                         </div>
                     </div>
                 </div>
@@ -110,6 +216,46 @@ export default function Home() {
                         เลือกสนามที่เหมาะกับคุณ พร้อมสิ่งอำนวยความสะดวกครบครัน
                     </p>
 
+                    {/* Search Bar */}
+                    <div style={{
+                        maxWidth: '480px',
+                        margin: '0 auto 1.5rem',
+                        position: 'relative'
+                    }}>
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="🔍 ค้นหาสนาม..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                paddingLeft: '1rem',
+                                paddingRight: '2.5rem',
+                                background: 'var(--bg-glass)',
+                                textAlign: 'center',
+                                fontSize: '1rem'
+                            }}
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem'
+                                }}
+                            >
+                                ✕
+                            </button>
+                        )}
+                    </div>
+
                     {/* Filter Pills */}
                     <div className="filter-pills">
                         {fieldTypes.map(type => (
@@ -118,7 +264,7 @@ export default function Home() {
                                 className={`filter-pill ${activeFilter === type.id ? 'active' : ''}`}
                                 onClick={() => setActiveFilter(type.id)}
                             >
-                                {type.name}
+                                {typeIcons[type.id]} {type.name}
                             </button>
                         ))}
                     </div>
@@ -137,6 +283,14 @@ export default function Home() {
                             <p className="empty-state-description">
                                 ลองเปลี่ยนตัวกรองหรือคำค้นหาใหม่
                             </p>
+                            {searchTerm && (
+                                <button
+                                    className="btn btn-sm btn-secondary"
+                                    onClick={() => { setSearchTerm(''); setActiveFilter('all'); }}
+                                >
+                                    ล้างการค้นหา
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -146,28 +300,95 @@ export default function Home() {
             <section className="section" style={{ background: 'var(--bg-secondary)' }}>
                 <div className="container">
                     <h2 className="section-title">ทำไมต้องเลือกเรา?</h2>
+                    <p className="section-description">ระบบจองสนามกีฬาที่ออกแบบเพื่อความสะดวกสบายของคุณ</p>
                     <div className="grid grid-cols-1 grid-cols-3" style={{ marginTop: '2rem' }}>
-                        <div className="stat-card" style={{ textAlign: 'center' }}>
-                            <div className="stat-icon primary" style={{ margin: '0 auto 1rem' }}>⚡</div>
-                            <h3 style={{ marginBottom: '0.5rem' }}>จองง่าย รวดเร็ว</h3>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                เลือกวัน เวลา กรอกข้อมูล ยืนยันการจองได้ทันที
+                        <div className="feature-card premium-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                            <div className="feature-icon-wrap" style={{
+                                width: '64px',
+                                height: '64px',
+                                background: 'rgba(255, 107, 53, 0.15)',
+                                borderRadius: 'var(--radius-xl)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1.25rem',
+                                fontSize: '1.75rem'
+                            }}>
+                                ⚡
+                            </div>
+                            <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>จองง่าย รวดเร็ว</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
+                                เลือกวัน เวลา กรอกข้อมูล ยืนยันการจองได้ทันที ไม่ต้องรอโทรแจ้ง
                             </p>
                         </div>
-                        <div className="stat-card" style={{ textAlign: 'center' }}>
-                            <div className="stat-icon success" style={{ margin: '0 auto 1rem' }}>📅</div>
-                            <h3 style={{ marginBottom: '0.5rem' }}>เช็คตารางเวลาว่าง</h3>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                ดูตารางเวลาว่างได้แบบ real-time ไม่ต้องโทรถาม
+                        <div className="feature-card premium-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                            <div className="feature-icon-wrap" style={{
+                                width: '64px',
+                                height: '64px',
+                                background: 'rgba(16, 185, 129, 0.15)',
+                                borderRadius: 'var(--radius-xl)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1.25rem',
+                                fontSize: '1.75rem'
+                            }}>
+                                📅
+                            </div>
+                            <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>เช็คตารางเวลาว่าง</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
+                                ดูตารางเวลาว่างได้แบบ real-time ไม่ต้องโทรถามซ้ำแล้วซ้ำอีก
                             </p>
                         </div>
-                        <div className="stat-card" style={{ textAlign: 'center' }}>
-                            <div className="stat-icon warning" style={{ margin: '0 auto 1rem' }}>🏟️</div>
-                            <h3 style={{ marginBottom: '0.5rem' }}>สนามมาตรฐาน</h3>
-                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                                สนามคุณภาพสูง พร้อมสิ่งอำนวยความสะดวกครบ
+                        <div className="feature-card premium-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                            <div className="feature-icon-wrap" style={{
+                                width: '64px',
+                                height: '64px',
+                                background: 'rgba(212, 175, 55, 0.15)',
+                                borderRadius: 'var(--radius-xl)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                margin: '0 auto 1.25rem',
+                                fontSize: '1.75rem'
+                            }}>
+                                💳
+                            </div>
+                            <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>ชำระเงินออนไลน์</h3>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
+                                สแกน QR Code PromptPay ชำระเงินทันที ปลอดภัย สะดวก
                             </p>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Banner */}
+            <section className="section" style={{ textAlign: 'center' }}>
+                <div className="container">
+                    <div className="premium-card" style={{
+                        padding: '3rem 2rem',
+                        background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
+                        border: '1px solid var(--border-accent)',
+                        textAlign: 'center'
+                    }}>
+                        <h2 style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                            marginBottom: '1rem',
+                            letterSpacing: '0.02em'
+                        }}>
+                            พร้อมเริ่มเล่นกีฬาแล้วหรือยัง?
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '500px', margin: '0 auto 2rem' }}>
+                            จองสนามกีฬาตอนนี้ เลือกเวลาที่สะดวก ชำระเงินออนไลน์ เริ่มเล่นได้ทันที
+                        </p>
+                        <a href="#fields" className="btn btn-lg btn-primary btn-glow" style={{
+                            background: 'var(--accent-sport)',
+                            boxShadow: '0 0 30px var(--accent-sport-glow)'
+                        }}>
+                            🏆 จองสนามเลย
+                        </a>
                     </div>
                 </div>
             </section>

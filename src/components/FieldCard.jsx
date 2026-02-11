@@ -1,18 +1,11 @@
 import { Link } from 'react-router-dom';
-import { formatPrice } from '../data';
+import { formatPrice, typeLabels } from '../data';
 
 export default function FieldCard({ field }) {
-    const typeLabels = {
-        football: 'ฟุตบอล',
-        badminton: 'แบดมินตัน',
-        basketball: 'บาสเกตบอล',
-        tennis: 'เทนนิส'
-    };
-
     return (
         <Link to={`/field/${field.id}`} className="card premium-card hover-lift">
             <div className="card-image">
-                <img src={field.image} alt={field.name} />
+                <img src={field.image} alt={field.name} width="400" height="225" />
                 <span className="card-badge">{typeLabels[field.type]}</span>
             </div>
             <div className="card-body">

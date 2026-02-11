@@ -18,8 +18,17 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        // Mock login
-        const user = { ...userData, role: 'admin' };
+        // Validate credentials
+        const validCredentials = {
+            email: 'admin@sport.com',
+            password: 'admin1234'
+        };
+
+        if (userData.email !== validCredentials.email || userData.password !== validCredentials.password) {
+            return false;
+        }
+
+        const user = { email: userData.email, name: 'Admin User', role: 'admin' };
         setUser(user);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(user));
