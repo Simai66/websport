@@ -353,12 +353,14 @@ export default function MyBookings() {
                                                         <button
                                                             onClick={() => handleCancel(booking.id)}
                                                             style={{
-                                                                background: 'none',
-                                                                border: 'none',
-                                                                color: 'var(--text-muted)',
+                                                                background: 'rgba(239, 68, 68, 0.15)',
+                                                                border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                                color: '#ef4444',
                                                                 fontSize: '0.7rem',
                                                                 cursor: 'pointer',
-                                                                textDecoration: 'underline'
+                                                                textDecoration: 'none',
+                                                                padding: '0.3rem 0.75rem',
+                                                                borderRadius: '6px'
                                                             }}
                                                         >
                                                             ยกเลิกการจอง

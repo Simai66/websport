@@ -153,7 +153,7 @@ const SETTINGS_KEY = 'sports_settings';
 
 // Default settings
 const defaultSettings = {
-    promptPayNumber: '0812345678', // เบอร์ PromptPay
+    promptPayNumber: '0972917189', // เบอร์ PromptPay
     promptPayName: 'SportBooking',
     customQRImage: '', // URL รูป QR ของตัวเอง (ถ้าว่างจะ generate)
     bookingTimeoutMinutes: 10,
