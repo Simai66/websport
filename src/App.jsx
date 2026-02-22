@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import FieldDetail from './pages/FieldDetail';
 import MyBookings from './pages/MyBookings';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
 
 // Dashboard Features
 import Overview from './features/dashboard/Overview';
@@ -30,10 +32,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/field/:id" element={<FieldDetail />} />
             <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
-
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
 
           {/* Protected Routes (Dashboard) */}
           <Route path="/dashboard" element={

@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar';
 import Toast from '../components/Toast';
 import QRPayment from '../components/QRPayment';
+import { IoCloseCircle, IoTimer, IoWater, IoCarSport, IoSparkles, IoWifi, IoCheckmark } from 'react-icons/io5';
+import { MdDry } from 'react-icons/md';
+import { BiDroplet } from 'react-icons/bi';
 import {
     getFieldById,
     timeSlots,
@@ -13,6 +16,7 @@ import {
     formatDateThai,
     typeLabels
 } from '../data';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function FieldDetail() {
     const { id } = useParams();
@@ -24,6 +28,16 @@ export default function FieldDetail() {
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
+    const { user } = useAuth();
+
+    // Auto-fill from user profile
+    useEffect(() => {
+        if (user) {
+            if (user.name && !customerName) setCustomerName(user.name);
+            if (user.phone && !customerPhone) setCustomerPhone(user.phone);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
@@ -37,7 +51,7 @@ export default function FieldDetail() {
             <div className="page-header">
                 <div className="container">
                     <div className="empty-state">
-                        <div className="empty-state-icon">❌</div>
+                        <div className="empty-state-icon"><IoCloseCircle /></div>
                         <h3 className="empty-state-title">ไม่พบสนามที่ต้องการ</h3>
                         <button className="btn btn-primary" onClick={() => navigate('/')}>
                             กลับหน้าแรก
@@ -153,15 +167,26 @@ export default function FieldDetail() {
     };
 
     const facilityIcons = {
-        'ห้องน้ำ': '🚿',
-        'ที่จอดรถ': '🅿️',
-        'ไฟส่องสว่าง': '✨',
-        'ห้องแต่งตัว': '👔',
-        'Wifi ฟรี': '📶',
-        'น้ำดื่มฟรี': '💧'
+        'ห้องน้ำ': <IoWater />,
+        'ที่จอดรถ': <IoCarSport />,
+        'ไฟส่องสว่าง': <IoSparkles />,
+        'ห้องแต่งตัว': <MdDry />,
+        'Wifi ฟรี': <IoWifi />,
+        'น้ำดื่มฟรี': <BiDroplet />
     };
 
-    const getFacilityIcon = (facility) => facilityIcons[facility] || '✓';
+    const getFacilityIcon = (facility) => facilityIcons[facility] || <IoCheckmark />;
+
+    // Check if a time slot is in the past (for today's date)
+    const isSlotPast = (slot) => {
+        if (!selectedDate) return false;
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        if (selectedDate !== todayStr) return false;
+        // slot format: "08:00-09:00" — check if the start hour has passed
+        const slotHour = parseInt(slot.split(':')[0], 10);
+        return slotHour <= now.getHours();
+    };
 
     return (
         <div>
@@ -288,22 +313,23 @@ export default function FieldDetail() {
                                     <div className="time-slots">
                                         {timeSlots.map(slot => {
                                             const booked = isSlotBooked(field.id, selectedDate, slot);
+                                            const past = isSlotPast(slot);
                                             const selected = selectedSlots.includes(slot);
-                                            const canSelect = canSelectSlot(slot);
+                                            const canSelect = canSelectSlot(slot) && !past;
                                             return (
                                                 <button
                                                     key={slot}
-                                                    className={`time-slot ${booked ? 'booked' : ''} ${selected ? 'selected' : ''}`}
-                                                    onClick={() => handleSlotClick(slot)}
-                                                    disabled={booked}
+                                                    className={`time-slot ${booked ? 'booked' : ''} ${selected ? 'selected' : ''} ${past ? 'booked' : ''}`}
+                                                    onClick={() => selectedDate && !booked && !past && canSelect && handleSlotClick(slot)}
+                                                    disabled={booked || past}
                                                     style={{
-                                                        opacity: !booked && !selected && !canSelect ? 0.4 : 1,
-                                                        cursor: booked ? 'not-allowed' : canSelect || selected ? 'pointer' : 'default'
+                                                        opacity: past ? 0.35 : (!booked && !selected && !canSelect ? 0.4 : 1),
+                                                        cursor: booked || past ? 'not-allowed' : canSelect || selected ? 'pointer' : 'default'
                                                     }}
                                                 >
                                                     <div className="time-slot-time">{slot}</div>
                                                     <div className="time-slot-status">
-                                                        {booked ? 'จองแล้ว' : selected ? '✓ เลือก' : 'ว่าง'}
+                                                        {past ? 'ผ่านไปแล้ว' : booked ? 'จองแล้ว' : selected ? '✓ เลือก' : 'ว่าง'}
                                                     </div>
                                                 </button>
                                             );
@@ -380,7 +406,7 @@ export default function FieldDetail() {
                                         textAlign: 'center',
                                         marginTop: '0.75rem'
                                     }}>
-                                        ⏱️ มีเวลา {settings.bookingTimeoutMinutes} นาที ในการชำระเงิน
+                                        <IoTimer style={{ verticalAlign: '-0.1em' }} /> มีเวลา {settings.bookingTimeoutMinutes} นาที ในการชำระเงิน
                                     </p>
                                 </div>
                             )}

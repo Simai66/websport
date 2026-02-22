@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Toast from '../components/Toast';
 import QRPayment from '../components/QRPayment';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { getBookings, cancelBooking, expireOverdueBookings, formatDateThai, formatPrice, typeLabels } from '../data';
+import { useAuth } from '../contexts/AuthContext';
+import { IoTrophy, IoCall, IoSearch, IoCalendar, IoTime } from 'react-icons/io5';
+import { HiClipboardList } from 'react-icons/hi';
 
 export default function MyBookings() {
+    const { user, isAuthenticated } = useAuth();
     const [phone, setPhone] = useState('');
     const [bookings, setBookings] = useState([]);
     const [searched, setSearched] = useState(false);
@@ -16,6 +20,20 @@ export default function MyBookings() {
     const [showQR, setShowQR] = useState(null);
     const [confirmState, setConfirmState] = useState({ isOpen: false, bookingId: null });
     const [filter, setFilter] = useState('upcoming');
+
+    // Auto-fill and auto-search when logged in
+    useEffect(() => {
+        if (isAuthenticated && user?.phone && !searched) {
+            const userPhone = user.phone;
+            setPhone(userPhone);
+            expireOverdueBookings();
+            const allBookings = getBookings();
+            const userBookings = allBookings.filter(b => b.customerPhone === userPhone.trim());
+            setBookings(userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+            setSearched(true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, user]);
 
     const handleSearch = () => {
         if (!phone.trim()) {
@@ -91,7 +109,7 @@ export default function MyBookings() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.1em'
                     }}>
-                        🏆 Sport Booking
+                        <IoTrophy style={{ verticalAlign: '-0.1em' }} /> Sport Booking
                     </div>
 
                     <h1 style={{
@@ -127,7 +145,7 @@ export default function MyBookings() {
                         padding: '0.35rem 0.35rem 0.35rem 1.25rem',
                         alignItems: 'center'
                     }}>
-                        <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem', fontSize: '1rem' }}>📱</span>
+                        <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem', fontSize: '1rem', display: 'flex' }}><IoCall /></span>
                         <input
                             type="tel"
                             placeholder="Enter Phone Number..."
@@ -163,7 +181,7 @@ export default function MyBookings() {
                                 transition: 'opacity 0.2s'
                             }}
                         >
-                            Search 🔍
+                            <IoSearch style={{ verticalAlign: '-0.1em' }} /> Search
                         </button>
                     </div>
 
@@ -281,12 +299,12 @@ export default function MyBookings() {
                                             <div style={{ padding: '1rem 1.25rem' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                        <span style={{ color: 'var(--accent-sport)' }}>📅</span>
+                                                        <span style={{ color: 'var(--accent-sport)', display: 'flex' }}><IoCalendar /></span>
                                                         <span style={{ fontWeight: 600 }}>DATE</span>
                                                         <span style={{ marginLeft: 'auto' }}>{formatDateThai(booking.date)}</span>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                        <span style={{ color: 'var(--accent-sport)' }}>🕐</span>
+                                                        <span style={{ color: 'var(--accent-sport)', display: 'flex' }}><IoTime /></span>
                                                         <span style={{ fontWeight: 600 }}>TIME</span>
                                                         <span style={{ marginLeft: 'auto' }}>
                                                             {booking.timeSlot}
@@ -373,7 +391,7 @@ export default function MyBookings() {
                                 </div>
                             ) : (
                                 <div className="empty-state" style={{ padding: '2rem' }}>
-                                    <div className="empty-state-icon">{filter === 'upcoming' ? '📅' : '📋'}</div>
+                                    <div className="empty-state-icon">{filter === 'upcoming' ? <IoCalendar /> : <HiClipboardList />}</div>
                                     <h3 className="empty-state-title">
                                         {filter === 'upcoming' ? 'ไม่มีการจองที่กำลังจะถึง' : 'ไม่มีประวัติการจอง'}
                                     </h3>
@@ -384,7 +402,7 @@ export default function MyBookings() {
 
                     {searched && bookings.length === 0 && (
                         <div className="empty-state">
-                            <div className="empty-state-icon">📋</div>
+                            <div className="empty-state-icon"><HiClipboardList /></div>
                             <h3 className="empty-state-title">ไม่พบการจอง</h3>
                             <p className="empty-state-description">
                                 ยังไม่มีการจองในระบบสำหรับเบอร์โทรศัพท์นี้
@@ -397,7 +415,7 @@ export default function MyBookings() {
 
                     {!searched && (
                         <div className="empty-state" style={{ padding: '2rem' }}>
-                            <div className="empty-state-icon">🔍</div>
+                            <div className="empty-state-icon"><IoSearch /></div>
                             <h3 className="empty-state-title">กรอกเบอร์โทรศัพท์เพื่อค้นหา</h3>
                             <p className="empty-state-description">
                                 ใช้เบอร์โทรศัพท์ที่คุณใช้ในการจองสนาม

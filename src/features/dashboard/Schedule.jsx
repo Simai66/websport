@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getBookings, getFields, timeSlots, fieldTypes, expireOverdueBookings, formatPrice, confirmBookingPayment } from '../../data';
+import { IoFootball, IoCheckmarkCircle, IoClose, IoTime } from 'react-icons/io5';
+import { MdSportsTennis, MdSportsBasketball } from 'react-icons/md';
+import { GiShuttlecock } from 'react-icons/gi';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 export default function Schedule() {
     const [fields, setFields] = useState(() => { expireOverdueBookings(); return getFields(); });
@@ -170,7 +174,7 @@ export default function Schedule() {
                                     <td className="schedule-field-cell">
                                         <div className="schedule-field-name">
                                             <span className="schedule-field-icon">
-                                                {field.type === 'football' ? '⚽' : field.type === 'badminton' ? '🏸' : field.type === 'basketball' ? '🏀' : '🎾'}
+                                                {field.type === 'football' ? <IoFootball /> : field.type === 'badminton' ? <GiShuttlecock /> : field.type === 'basketball' ? <MdSportsBasketball /> : <MdSportsTennis />}
                                             </span>
                                             <div>
                                                 <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{field.name}</div>
@@ -188,8 +192,8 @@ export default function Schedule() {
                                                 onClick={(e) => handleCellClick(field, slot, booking, e)}
                                             >
                                                 <div className="schedule-cell-content">
-                                                    {status === 'pending' && <span className="schedule-cell-icon">⏳</span>}
-                                                    {status === 'confirmed' && <span className="schedule-cell-icon">✓</span>}
+                                                    {status === 'pending' && <span className="schedule-cell-icon"><AiOutlineLoading3Quarters /></span>}
+                                                    {status === 'confirmed' && <span className="schedule-cell-icon"><IoCheckmarkCircle /></span>}
                                                 </div>
                                             </td>
                                         );
@@ -213,7 +217,7 @@ export default function Schedule() {
                         <button
                             onClick={() => setPopup(null)}
                             style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}
-                        >✕</button>
+                        ><IoClose /></button>
                     </div>
                     <div className="schedule-popup-body">
                         <div className="schedule-popup-row">
@@ -235,7 +239,7 @@ export default function Schedule() {
                         <div className="schedule-popup-row">
                             <span className="schedule-popup-label">Status</span>
                             <span className={`badge badge-${popup.booking.status === 'confirmed' ? 'success' : 'warning'}`}>
-                                {popup.booking.status === 'confirmed' ? '✓ ชำระแล้ว' : '⏳ รอชำระ'}
+                                {popup.booking.status === 'confirmed' ? <><IoCheckmarkCircle /> ชำระแล้ว</> : <><IoTime /> รอชำระ</>}
                             </span>
                         </div>
                         <div className="schedule-popup-row">
@@ -250,7 +254,7 @@ export default function Schedule() {
                                 style={{ width: '100%' }}
                                 onClick={() => handleConfirmBooking(popup.booking.id)}
                             >
-                                ✓ Confirm Payment
+                                <IoCheckmarkCircle /> Confirm Payment
                             </button>
                         </div>
                     )}

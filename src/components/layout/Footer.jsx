@@ -1,3 +1,5 @@
+import { IoFootball } from 'react-icons/io5';
+
 export default function Footer() {
     return (
         <footer className="footer">
@@ -14,7 +16,7 @@ export default function Footer() {
                             justifyContent: 'center',
                             fontSize: '1.25rem',
                             boxShadow: '0 0 15px var(--accent-sport-glow)'
-                        }}>⚽</div>
+                        }}><IoFootball /></div>
                         <span style={{ color: 'var(--text-primary)' }}>SPORTBOOKING</span>
                     </div>
 

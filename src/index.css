@@ -3321,3 +3321,127 @@ ol {
     transform: rotate(360deg);
   }
 }
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* =====================================================
+   Register Page
+   ===================================================== */
+.register-card {
+  animation: registerSlideUp 0.5s ease-out;
+}
+
+@keyframes registerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.register-error {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--danger-400);
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  animation: shakeError 0.4s ease;
+}
+
+@keyframes shakeError {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-4px);
+  }
+
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.register-toggle-pw {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.register-toggle-pw:hover {
+  opacity: 1;
+}
+
+.register-pw-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.register-pw-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  transition: color 0.2s ease;
+}
+
+.pw-check-icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.pw-check--pass {
+  color: var(--success-400);
+}
+
+.pw-check--fail {
+  color: var(--text-muted);
+}
+
+.register-field-hint {
+  display: block;
+  font-size: 0.78rem;
+  margin-top: 0.4rem;
+  transition: color 0.2s;
+}
+
+.register-field-hint--error {
+  color: var(--danger-400);
+}
+
+.register-field-hint--success {
+  color: var(--success-400);
+}

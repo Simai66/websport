@@ -2,6 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import FieldCard from '../components/FieldCard';
 import { getFields, getBookings, fieldTypes } from '../data';
+import { IoFitness, IoFootball, IoSearch, IoTrophy, IoFlash, IoCalendar, IoCard, IoStar } from 'react-icons/io5';
+import { MdSportsTennis, MdSportsBasketball } from 'react-icons/md';
+import { GiShuttlecock } from 'react-icons/gi';
+import { HiClipboardList } from 'react-icons/hi';
 
 // Animated counter component
 function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
@@ -37,11 +41,11 @@ function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
 }
 
 const typeIcons = {
-    all: '🏟️',
-    football: '⚽',
-    badminton: '🏸',
-    basketball: '🏀',
-    tennis: '🎾'
+    all: <IoFitness style={{ fontSize: '1.1em', verticalAlign: '-0.1em' }} />,
+    football: <IoFootball style={{ fontSize: '1.1em', verticalAlign: '-0.1em' }} />,
+    badminton: <GiShuttlecock style={{ fontSize: '1.1em', verticalAlign: '-0.1em' }} />,
+    basketball: <MdSportsBasketball style={{ fontSize: '1.1em', verticalAlign: '-0.1em' }} />,
+    tennis: <MdSportsTennis style={{ fontSize: '1.1em', verticalAlign: '-0.1em' }} />
 };
 
 export default function Home() {
@@ -116,12 +120,12 @@ export default function Home() {
                                 background: 'var(--accent-sport)',
                                 boxShadow: '0 0 30px var(--accent-sport-glow)'
                             }}>
-                                ⚡ เริ่มจองเลย
+                                <IoFlash style={{ verticalAlign: '-0.1em' }} /> เริ่มจองเลย
                             </a>
                             <Link to="/my-bookings" className="btn btn-lg btn-secondary" style={{
                                 border: '1px solid var(--border-color-strong)'
                             }}>
-                                📋 เช็คการจอง
+                                <HiClipboardList style={{ verticalAlign: '-0.1em' }} /> เช็คการจอง
                             </Link>
                         </div>
 
@@ -164,7 +168,7 @@ export default function Home() {
                                     color: 'var(--text-primary)',
                                     fontFamily: 'var(--font-numbers)'
                                 }}>
-                                    ⭐ 4.9
+                                    <IoStar style={{ verticalAlign: '-0.1em', color: 'var(--accent-gold)' }} /> 4.9
                                 </div>
                                 <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>คะแนนรีวิว</div>
                             </div>
@@ -182,7 +186,7 @@ export default function Home() {
                     <div className="how-it-works-grid">
                         <div className="how-it-works-step">
                             <div className="how-it-works-number">1</div>
-                            <div className="how-it-works-icon">🏟️</div>
+                            <div className="how-it-works-icon"><IoFitness /></div>
                             <h3 className="how-it-works-title">เลือกสนาม</h3>
                             <p className="how-it-works-desc">เลือกสนามกีฬาที่ต้องการ พร้อมดูรายละเอียดและสิ่งอำนวยความสะดวก</p>
                         </div>
@@ -191,7 +195,7 @@ export default function Home() {
                         </div>
                         <div className="how-it-works-step">
                             <div className="how-it-works-number">2</div>
-                            <div className="how-it-works-icon">📅</div>
+                            <div className="how-it-works-icon"><IoCalendar /></div>
                             <h3 className="how-it-works-title">เลือกวันเวลา</h3>
                             <p className="how-it-works-desc">ดูตารางเวลาว่าง เลือกวันที่และช่วงเวลาที่สะดวก</p>
                         </div>
@@ -200,7 +204,7 @@ export default function Home() {
                         </div>
                         <div className="how-it-works-step">
                             <div className="how-it-works-number">3</div>
-                            <div className="how-it-works-icon">💳</div>
+                            <div className="how-it-works-icon"><IoCard /></div>
                             <h3 className="how-it-works-title">ชำระเงิน</h3>
                             <p className="how-it-works-desc">สแกน QR Code PromptPay ชำระเงินง่ายๆ รับยืนยันทันที</p>
                         </div>
@@ -225,7 +229,7 @@ export default function Home() {
                         <input
                             type="text"
                             className="form-input"
-                            placeholder="🔍 ค้นหาสนาม..."
+                            placeholder="ค้นหาสนาม..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
@@ -278,7 +282,7 @@ export default function Home() {
 
                     {filteredFields.length === 0 && (
                         <div className="empty-state">
-                            <div className="empty-state-icon">🔍</div>
+                            <div className="empty-state-icon"><IoSearch /></div>
                             <h3 className="empty-state-title">ไม่พบสนามที่ค้นหา</h3>
                             <p className="empty-state-description">
                                 ลองเปลี่ยนตัวกรองหรือคำค้นหาใหม่
@@ -314,7 +318,7 @@ export default function Home() {
                                 margin: '0 auto 1.25rem',
                                 fontSize: '1.75rem'
                             }}>
-                                ⚡
+                                <IoFlash />
                             </div>
                             <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>จองง่าย รวดเร็ว</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
@@ -333,7 +337,7 @@ export default function Home() {
                                 margin: '0 auto 1.25rem',
                                 fontSize: '1.75rem'
                             }}>
-                                📅
+                                <IoCalendar />
                             </div>
                             <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>เช็คตารางเวลาว่าง</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
@@ -352,7 +356,7 @@ export default function Home() {
                                 margin: '0 auto 1.25rem',
                                 fontSize: '1.75rem'
                             }}>
-                                💳
+                                <IoCard />
                             </div>
                             <h3 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>ชำระเงินออนไลน์</h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.7 }}>
@@ -387,7 +391,7 @@ export default function Home() {
                             background: 'var(--accent-sport)',
                             boxShadow: '0 0 30px var(--accent-sport-glow)'
                         }}>
-                            🏆 จองสนามเลย
+                            <IoTrophy style={{ verticalAlign: '-0.1em' }} /> จองสนามเลย
                         </a>
                     </div>
                 </div>

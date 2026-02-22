@@ -1,17 +1,19 @@
 import { Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { IoFootball, IoCalendar, IoSettings, IoLogOut } from 'react-icons/io5';
+import { MdDashboard, MdStadium } from 'react-icons/md';
 
 export default function DashboardLayout() {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const menuItems = [
-        { path: '/dashboard', label: 'ภาพรวม', icon: '📊' },
-        { path: '/dashboard/bookings', label: 'จัดการการจอง', icon: '📅' },
-        { path: '/dashboard/schedule', label: 'ตารางสนาม', icon: '🏟️' },
-        { path: '/dashboard/fields', label: 'จัดการสนาม', icon: '⚽' },
-        { path: '/dashboard/settings', label: 'ตั้งค่า', icon: '⚙️' },
+        { path: '/dashboard', label: 'ภาพรวม', icon: <MdDashboard /> },
+        { path: '/dashboard/bookings', label: 'จัดการการจอง', icon: <IoCalendar /> },
+        { path: '/dashboard/schedule', label: 'ตารางสนาม', icon: <MdStadium /> },
+        { path: '/dashboard/fields', label: 'จัดการสนาม', icon: <IoFootball /> },
+        { path: '/dashboard/settings', label: 'ตั้งค่า', icon: <IoSettings /> },
     ];
 
     return (
@@ -74,7 +76,7 @@ export default function DashboardLayout() {
                         color: 'var(--text-secondary)',
                         cursor: 'pointer'
                     }}>
-                        {sidebarOpen ? 'ออกจากระบบ' : '🚪'}
+                        {sidebarOpen ? 'ออกจากระบบ' : <IoLogOut />}
                     </button>
                 </div>
             </aside>
