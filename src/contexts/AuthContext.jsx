@@ -5,7 +5,11 @@ import {
     signInWithPopup,
     signOut,
     onAuthStateChanged,
-    updateProfile
+    updateProfile,
+    updatePassword,
+    sendPasswordResetEmail,
+    EmailAuthProvider,
+    reauthenticateWithCredential
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase';
@@ -24,7 +28,6 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                // Get extra user data from Firestore
                 let userData = {
                     uid: firebaseUser.uid,
                     email: firebaseUser.email,
@@ -33,7 +36,6 @@ export const AuthProvider = ({ children }) => {
                     role: 'user'
                 };
 
-                // Auto-assign owner role for the owner email
                 const isOwnerEmail = firebaseUser.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
 
                 try {
@@ -43,29 +45,26 @@ export const AuthProvider = ({ children }) => {
                         const data = userDoc.data();
                         userData = { ...userData, ...data };
 
-                        // If this is the owner email but role is not 'owner', fix it
+                        // Auto-fix owner role if needed
                         if (isOwnerEmail && data.role !== 'owner') {
                             await updateDoc(userRef, { role: 'owner' });
                             userData.role = 'owner';
                         }
-                    } else if (isOwnerEmail) {
-                        // Owner doc doesn't exist yet — create it
-                        const ownerData = {
+                    } else {
+                        // Create user document on first login
+                        const newUserData = {
                             email: firebaseUser.email,
-                            name: firebaseUser.displayName || 'Owner',
+                            name: firebaseUser.displayName || 'User',
                             photoURL: firebaseUser.photoURL,
-                            role: 'owner',
+                            role: isOwnerEmail ? 'owner' : 'user',
                             createdAt: new Date().toISOString()
                         };
-                        await setDoc(userRef, ownerData);
-                        userData = { ...userData, ...ownerData };
+                        await setDoc(userRef, newUserData);
+                        userData = { ...userData, ...newUserData };
                     }
                 } catch (err) {
                     console.warn('Could not fetch user data from Firestore:', err);
-                    // Fallback: still mark as owner if email matches
-                    if (isOwnerEmail) {
-                        userData.role = 'owner';
-                    }
+                    if (isOwnerEmail) userData.role = 'owner';
                 }
 
                 setUser(userData);
@@ -84,48 +83,44 @@ export const AuthProvider = ({ children }) => {
     const isOwner = user?.role === 'owner';
     const isAdmin = user?.role === 'admin' || user?.role === 'owner';
 
-    // Register with phone number (converted to email)
-    const register = async (phone, password) => {
-        const email = `${phone}@sportbooking.app`;
-
+    // Register with email + password
+    const register = async ({ email, password, name, phone }) => {
         try {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Update display name
-            await updateProfile(cred.user, {
-                displayName: `User-${phone.slice(-4)}`
-            });
+            await updateProfile(cred.user, { displayName: name || email.split('@')[0] });
 
-            // Save user data to Firestore (non-blocking — don't let it fail the registration)
             try {
                 await setDoc(doc(db, 'users', cred.user.uid), {
-                    phone,
                     email,
-                    name: `User-${phone.slice(-4)}`,
-                    role: 'user',
+                    name: name || email.split('@')[0],
+                    phone: phone || '',
+                    role: email.toLowerCase() === OWNER_EMAIL.toLowerCase() ? 'owner' : 'user',
                     createdAt: new Date().toISOString()
                 });
-            } catch (firestoreErr) {
-                console.warn('Firestore save failed (auth still succeeded):', firestoreErr);
+            } catch (fsErr) {
+                console.warn('Firestore save failed:', fsErr);
             }
 
             return { success: true };
         } catch (err) {
             if (err.code === 'auth/email-already-in-use') {
-                return { success: false, message: 'เบอร์โทรนี้ถูกใช้สมัครแล้ว' };
+                return { success: false, message: 'อีเมลนี้ถูกใช้สมัครแล้ว' };
+            }
+            if (err.code === 'auth/weak-password') {
+                return { success: false, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' };
             }
             return { success: false, message: err.message };
         }
     };
 
-    // Login with phone number (converted to email)
-    const loginWithPhone = async (phone, password) => {
-        const email = `${phone}@sportbooking.app`;
+    // Login with email + password
+    const login = async (email, password) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             return { success: true };
         } catch (err) {
-            return { success: false, message: 'เบอร์โทร หรือ รหัสผ่านไม่ถูกต้อง' };
+            return { success: false, message: 'อีเมล หรือ รหัสผ่านไม่ถูกต้อง' };
         }
     };
 
@@ -134,7 +129,6 @@ export const AuthProvider = ({ children }) => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
 
-            // Save/update user in Firestore
             const userRef = doc(db, 'users', result.user.uid);
             const userDoc = await getDoc(userRef);
 
@@ -158,43 +152,33 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Admin login with email — checks role after auth
-    const login = async (userData) => {
-        const { identifier, password } = userData;
-        try {
-            const cred = await signInWithEmailAndPassword(auth, identifier, password);
-
-            // Check role in Firestore
-            try {
-                const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
-                    if (data.role === 'admin' || data.role === 'owner' || isOwnerEmail) {
-                        return { success: true };
-                    }
-                } else {
-                    // If Firestore doc doesn't exist but email is owner
-                    const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
-                    if (isOwnerEmail) return { success: true };
-                }
-            } catch (fsErr) {
-                console.warn('Could not verify admin role:', fsErr);
-                // Allow owner email even if Firestore fails
-                const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
-                if (isOwnerEmail) return { success: true };
-            }
-
-            // Not an admin — sign out
-            await signOut(auth);
-            return { success: false, message: 'คุณไม่มีสิทธิ์เข้าระบบแอดมิน' };
-        } catch (err) {
-            return { success: false, message: 'Email หรือ Password ไม่ถูกต้อง' };
-        }
-    };
-
     const logout = async () => {
         await signOut(auth);
+    };
+
+    // Change password
+    const changePassword = async (currentPassword, newPassword) => {
+        if (!auth.currentUser || !auth.currentUser.email) {
+            return { success: false, message: 'ไม่สามารถเปลี่ยนรหัสผ่านได้ (ล็อกอินผ่าน Google)' };
+        }
+
+        try {
+            // Re-authenticate first
+            const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+
+            // Update password
+            await updatePassword(auth.currentUser, newPassword);
+            return { success: true };
+        } catch (err) {
+            if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                return { success: false, message: 'รหัสผ่านเดิมไม่ถูกต้อง' };
+            }
+            if (err.code === 'auth/weak-password') {
+                return { success: false, message: 'รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร' };
+            }
+            return { success: false, message: err.message };
+        }
     };
 
     // Update user profile (name, phone)
@@ -202,12 +186,10 @@ export const AuthProvider = ({ children }) => {
         if (!auth.currentUser) return { success: false, message: 'ไม่ได้เข้าสู่ระบบ' };
 
         try {
-            // Update Firebase Auth display name
             if (data.name) {
                 await updateProfile(auth.currentUser, { displayName: data.name });
             }
 
-            // Update Firestore
             try {
                 const userRef = doc(db, 'users', auth.currentUser.uid);
                 const userDoc = await getDoc(userRef);
@@ -220,16 +202,14 @@ export const AuthProvider = ({ children }) => {
                 console.warn('Firestore update failed:', fsErr);
             }
 
-            // Update local state
             setUser(prev => ({ ...prev, ...data }));
-
             return { success: true };
         } catch (err) {
             return { success: false, message: err.message };
         }
     };
 
-    // Get all users from Firestore (Owner/Admin only)
+    // Get all users (Owner/Admin)
     const getAllUsers = async () => {
         try {
             const snapshot = await getDocs(collection(db, 'users'));
@@ -259,6 +239,18 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Reset password (forgot password)
+    const resetPassword = async (email) => {
+        try {
+            await sendPasswordResetEmail(auth, email);
+            return { success: true };
+        } catch (err) {
+            if (err.code === 'auth/user-not-found') {
+                return { success: false, message: 'ไม่พบอีเมลนี้ในระบบ' };
+            }
+            return { success: false, message: err.message };
+        }
+    };
     return (
         <AuthContext.Provider value={{
             user,
@@ -267,10 +259,11 @@ export const AuthProvider = ({ children }) => {
             isOwner,
             isAdmin,
             register,
-            loginWithPhone,
-            loginWithGoogle,
             login,
+            loginWithGoogle,
             logout,
+            changePassword,
+            resetPassword,
             updateUserProfile,
             getAllUsers,
             updateUserRole

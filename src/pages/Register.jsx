@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { IoCall, IoLockClosed, IoEye, IoEyeOff, IoCheckmarkCircle, IoCloseCircle, IoAlertCircle, IoHome, IoRocket } from 'react-icons/io5';
+import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoCheckmarkCircle, IoCloseCircle, IoAlertCircle, IoHome, IoCall, IoPersonCircle } from 'react-icons/io5';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { HiSparkles } from 'react-icons/hi';
+import { IoRocket } from 'react-icons/io5';
 
 export default function Register() {
     const [success, setSuccess] = useState(false);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,7 +29,7 @@ export default function Register() {
 
     const allValid = validations.every((v) => v.test(password));
     const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
-    const isPhoneValid = /^0\d{9}$/.test(phone);
+    const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const handlePhoneChange = (e) => {
         const val = e.target.value.replace(/\D/g, '');
@@ -43,8 +46,8 @@ export default function Register() {
         e.preventDefault();
         setError('');
 
-        if (!isPhoneValid) {
-            setError('กรุณากรอกเบอร์โทรศัพท์ 10 หลักที่ถูกต้อง');
+        if (!isEmailValid) {
+            setError('กรุณากรอกอีเมลที่ถูกต้อง');
             return;
         }
         if (!allValid) {
@@ -58,7 +61,7 @@ export default function Register() {
 
         setLoading(true);
 
-        const result = await register(phone, password);
+        const result = await register({ email, password, name: name.trim(), phone });
         if (result.success) {
             setSuccess(true);
         } else {
@@ -70,18 +73,14 @@ export default function Register() {
     if (success) {
         return (
             <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '70vh',
-                padding: '2rem 1rem',
-                paddingTop: '120px'
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                minHeight: '70vh', padding: '2rem 1rem', paddingTop: '120px'
             }}>
                 <div className="premium-card register-card" style={{ padding: '3rem', width: '100%', maxWidth: '440px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><HiSparkles /></div>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--accent-sport)' }}><HiSparkles /></div>
                     <h2 className="gradient-text" style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>สมัครสมาชิกสำเร็จ!</h2>
                     <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                        เบอร์โทร: <strong>{formatPhone(phone)}</strong>
+                        อีเมล: <strong>{email}</strong>
                     </p>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.85rem' }}>
                         ข้อมูลถูกบันทึกเรียบร้อยแล้ว คุณสามารถจองสนามกีฬาได้เลย
@@ -96,12 +95,8 @@ export default function Register() {
 
     return (
         <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '70vh',
-            padding: '2rem 1rem',
-            paddingTop: '120px'
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minHeight: '70vh', padding: '2rem 1rem', paddingTop: '120px'
         }}>
             <div className="premium-card register-card" style={{ padding: '2.5rem', width: '100%', maxWidth: '440px' }}>
                 <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.75rem' }}>
@@ -118,10 +113,51 @@ export default function Register() {
                 )}
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    {/* Phone Number */}
+                    {/* Name */}
                     <div>
                         <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                            <IoCall style={{ verticalAlign: '-0.1em' }} /> เบอร์โทรศัพท์
+                            <IoPersonCircle style={{ verticalAlign: '-0.1em' }} /> ชื่อ-นามสกุล
+                        </label>
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="กรอกชื่อ-นามสกุล"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            disabled={loading}
+                            autoFocus
+                        />
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                            <IoMail style={{ verticalAlign: '-0.1em' }} /> อีเมล
+                        </label>
+                        <input
+                            type="email"
+                            className="form-input"
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            disabled={loading}
+                        />
+                        {email.length > 0 && !isEmailValid && (
+                            <span className="register-field-hint register-field-hint--error">
+                                กรุณากรอกอีเมลที่ถูกต้อง
+                            </span>
+                        )}
+                        {isEmailValid && (
+                            <span className="register-field-hint register-field-hint--success">
+                                ✓ อีเมลถูกต้อง
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Phone (optional) */}
+                    <div>
+                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                            <IoCall style={{ verticalAlign: '-0.1em' }} /> เบอร์โทรศัพท์ <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>(ไม่บังคับ)</span>
                         </label>
                         <input
                             type="tel"
@@ -130,19 +166,8 @@ export default function Register() {
                             value={formatPhone(phone)}
                             onChange={handlePhoneChange}
                             disabled={loading}
-                            autoFocus
                             maxLength={12}
                         />
-                        {phone.length > 0 && !isPhoneValid && (
-                            <span className="register-field-hint register-field-hint--error">
-                                กรุณากรอกเบอร์โทร 10 หลัก (เริ่มต้นด้วย 0)
-                            </span>
-                        )}
-                        {isPhoneValid && (
-                            <span className="register-field-hint register-field-hint--success">
-                                ✓ เบอร์โทรถูกต้อง
-                            </span>
-                        )}
                     </div>
 
                     {/* Password */}
@@ -169,7 +194,6 @@ export default function Register() {
                             </button>
                         </div>
 
-                        {/* Password Validation Checklist */}
                         {password.length > 0 && (
                             <ul className="register-pw-checklist">
                                 {validations.map((v, i) => (
@@ -216,16 +240,23 @@ export default function Register() {
                     <button
                         type="submit"
                         className="btn btn-primary btn-glow"
-                        disabled={loading || !isPhoneValid || !allValid || !passwordsMatch}
+                        disabled={loading || !isEmailValid || !allValid || !passwordsMatch}
                         style={{
                             marginTop: '0.5rem',
-                            opacity: (loading || !isPhoneValid || !allValid || !passwordsMatch) ? 0.6 : 1,
-                            cursor: (loading || !isPhoneValid || !allValid || !passwordsMatch) ? 'not-allowed' : 'pointer'
+                            opacity: (loading || !isEmailValid || !allValid || !passwordsMatch) ? 0.6 : 1,
+                            cursor: (loading || !isEmailValid || !allValid || !passwordsMatch) ? 'not-allowed' : 'pointer'
                         }}
                     >
                         {loading ? <><AiOutlineLoading3Quarters className="spin" /> กำลังสมัคร...</> : <><IoRocket /> สมัครสมาชิก</>}
                     </button>
                 </form>
+
+                <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                    มีบัญชีอยู่แล้ว?{' '}
+                    <Link to="/login" style={{ color: 'var(--primary-400)', fontWeight: 600 }}>
+                        เข้าสู่ระบบ
+                    </Link>
+                </p>
             </div>
         </div>
     );
