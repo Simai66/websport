@@ -69,9 +69,17 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
         setTimeLeft(initialTime);
     }, [booking?.paymentDeadline, settings.bookingTimeoutMinutes]);
 
+    // Stop timer when slip is uploaded
     useEffect(() => {
-        if (timeLeft === null || timeLeft <= 0) {
-            if (timeLeft === 0 && onTimeout) onTimeout();
+        if (slipPreview && timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+    }, [slipPreview]);
+
+    useEffect(() => {
+        if (timeLeft === null || timeLeft <= 0 || slipPreview) {
+            if (timeLeft === 0 && !slipPreview && onTimeout) onTimeout();
             return;
         }
         timerRef.current = setInterval(() => {
@@ -85,7 +93,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
             });
         }, 1000);
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [timeLeft === null]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [timeLeft === null, slipPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const formatTime = (seconds) => {
         if (seconds === null) return '--:--';
@@ -141,28 +149,53 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                 <div style={{
                     margin: '0 1.5rem',
                     padding: '0.85rem 1.25rem',
-                    background: isUrgent
-                        ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.08))'
-                        : 'linear-gradient(135deg, rgba(255, 159, 28, 0.2), rgba(255, 159, 28, 0.05))',
+                    background: slipPreview
+                        ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05))'
+                        : isUrgent
+                            ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.08))'
+                            : 'linear-gradient(135deg, rgba(255, 159, 28, 0.2), rgba(255, 159, 28, 0.05))',
                     borderRadius: 'var(--radius-lg)',
                     textAlign: 'center',
-                    border: isUrgent
-                        ? '1px solid rgba(239, 68, 68, 0.2)'
-                        : '1px solid rgba(255, 159, 28, 0.15)'
+                    border: slipPreview
+                        ? '1px solid rgba(34, 197, 94, 0.2)'
+                        : isUrgent
+                            ? '1px solid rgba(239, 68, 68, 0.2)'
+                            : '1px solid rgba(255, 159, 28, 0.15)'
                 }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
-                        กรุณาชำระภายใน
-                    </div>
-                    <div style={{
-                        fontSize: '2.75rem',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-numbers)',
-                        color: isUrgent ? 'var(--danger-400)' : 'var(--accent-sport)',
-                        lineHeight: 1.1,
-                        letterSpacing: '0.05em'
-                    }}>
-                        {formatTime(timeLeft)}
-                    </div>
+                    {slipPreview ? (
+                        <>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                                สถานะ
+                            </div>
+                            <div style={{
+                                fontSize: '1.5rem',
+                                fontWeight: 700,
+                                color: '#22c55e',
+                                lineHeight: 1.3
+                            }}>
+                                ✓ ส่งสลิปแล้ว
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                รอ Admin ตรวจสอบ
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                                กรุณาชำระภายใน
+                            </div>
+                            <div style={{
+                                fontSize: '2.75rem',
+                                fontWeight: 700,
+                                fontFamily: 'var(--font-numbers)',
+                                color: isUrgent ? 'var(--danger-400)' : 'var(--accent-sport)',
+                                lineHeight: 1.1,
+                                letterSpacing: '0.05em'
+                            }}>
+                                {formatTime(timeLeft)}
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Amount */}
