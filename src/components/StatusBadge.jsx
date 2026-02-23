@@ -1,6 +1,6 @@
 const statusConfig = {
     confirmed: { className: 'badge-success', icon: '✓', label: 'ชำระแล้ว' },
-    pending: { className: 'badge-warning', icon: '⏳', label: 'รอชำระ' },
+    pending: { className: 'badge-warning', icon: '○', label: 'รอชำระ' },
     cancelled: { className: 'badge-danger', icon: '✕', label: 'ยกเลิก' },
     expired: { className: 'badge-danger', icon: '⏱', label: 'หมดเวลา' }
 };

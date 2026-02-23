@@ -113,7 +113,7 @@ export default function Bookings() {
                             <div className="admin-stat-label">รายได้วันนี้</div>
                             <div className="admin-stat-value" style={{ fontSize: '1.5rem' }}>฿{formatPrice(todayRevenue)}</div>
                         </div>
-                        <div className="admin-stat-icon gold" style={{ marginBottom: 0 }}>💰</div>
+                        <div className="admin-stat-icon gold" style={{ marginBottom: 0 }}>฿</div>
                     </div>
                 </div>
                 <div className="admin-stat-card">
@@ -131,7 +131,7 @@ export default function Bookings() {
                             <div className="admin-stat-label">รออนุมัติ</div>
                             <div className="admin-stat-value" style={{ fontSize: '1.5rem', color: 'var(--accent-sport)' }}>{pendingCount}</div>
                         </div>
-                        <div className="admin-stat-icon orange" style={{ marginBottom: 0 }}>⏳</div>
+                        <div className="admin-stat-icon orange" style={{ marginBottom: 0 }}>○</div>
                     </div>
                 </div>
             </div>

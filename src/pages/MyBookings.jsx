@@ -20,6 +20,7 @@ export default function MyBookings() {
     const [showQR, setShowQR] = useState(null);
     const [confirmState, setConfirmState] = useState({ isOpen: false, bookingId: null });
     const [filter, setFilter] = useState('upcoming');
+    const [selectedBooking, setSelectedBooking] = useState(null);
 
     // Auto-fill and auto-search when logged in
     useEffect(() => {
@@ -347,20 +348,23 @@ export default function MyBookings() {
                                                                 {booking.status === 'cancelled' ? 'Cancelled' : 'Expired'}
                                                             </span>
                                                         ) : (
-                                                            <Link
-                                                                to={`/field/${booking.fieldId}`}
+                                                            <button
+                                                                onClick={() => setSelectedBooking(booking)}
                                                                 style={{
                                                                     fontSize: '0.8rem',
                                                                     color: 'var(--accent-sport)',
-                                                                    textDecoration: 'none',
+                                                                    background: 'none',
+                                                                    border: 'none',
+                                                                    cursor: 'pointer',
                                                                     fontWeight: 600,
                                                                     display: 'flex',
                                                                     alignItems: 'center',
-                                                                    gap: '0.25rem'
+                                                                    gap: '0.25rem',
+                                                                    padding: 0
                                                                 }}
                                                             >
                                                                 Details →
-                                                            </Link>
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -456,6 +460,143 @@ export default function MyBookings() {
                         type={toastType}
                         onClose={() => setShowToast(false)}
                     />
+                </div>
+            )}
+
+            {/* Booking Detail Popup */}
+            {selectedBooking && (
+                <div className="modal-overlay active" onClick={() => setSelectedBooking(null)} role="dialog" aria-modal="true">
+                    <div onClick={e => e.stopPropagation()} style={{
+                        background: 'var(--bg-card)',
+                        borderRadius: 'var(--radius-xl)',
+                        border: '1px solid var(--border-color)',
+                        maxWidth: '440px',
+                        width: '90%',
+                        overflow: 'hidden',
+                        boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
+                        maxHeight: '85vh',
+                        overflowY: 'auto'
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            padding: '1.25rem 1.5rem',
+                            borderBottom: '1px solid var(--border-color)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>รายละเอียดการจอง</h3>
+                            <button
+                                onClick={() => setSelectedBooking(null)}
+                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.25rem', cursor: 'pointer', padding: '0.25rem' }}
+                            >✕</button>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ padding: '1.5rem' }}>
+                            {/* Status */}
+                            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                                <StatusBadge status={selectedBooking.status} />
+                            </div>
+
+                            {/* Booking Info */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--radius-lg)',
+                                padding: '1.25rem',
+                                marginBottom: '1rem'
+                            }}>
+                                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>ข้อมูลการจอง</h4>
+                                {[{label:'สนาม', value: selectedBooking.fieldName, accent: true},
+                                  {label:'วันที่', value: formatDateThai(selectedBooking.date)},
+                                  {label:'เวลา', value: selectedBooking.timeSlot},
+                                  {label:'รหัสการจอง', value: '#' + (selectedBooking.id?.slice(-8).toUpperCase()), mono: true}
+                                ].map((row, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{row.label}</span>
+                                        <span style={{
+                                            color: row.accent ? 'var(--accent-sport)' : 'var(--text-primary)',
+                                            fontWeight: row.accent ? 600 : 400,
+                                            fontFamily: row.mono ? 'monospace' : 'inherit',
+                                            fontSize: '0.85rem'
+                                        }}>{row.value}</span>
+                                    </div>
+                                ))}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.6rem', borderTop: '1px solid var(--border-color)' }}>
+                                    <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem' }}>ราคารวม</span>
+                                    <span style={{ color: 'var(--accent-sport)', fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-numbers)' }}>
+                                        ฿{formatPrice(selectedBooking.totalPrice || selectedBooking.price)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Customer Info */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--radius-lg)',
+                                padding: '1.25rem',
+                                marginBottom: '1rem'
+                            }}>
+                                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>ข้อมูลผู้จอง</h4>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>ชื่อ</span>
+                                    <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>{selectedBooking.customerName}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>เบอร์โทร</span>
+                                    <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>{selectedBooking.customerPhone}</span>
+                                </div>
+                            </div>
+
+                            {/* Payment Slip */}
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--radius-lg)',
+                                padding: '1.25rem',
+                                marginBottom: '1.25rem'
+                            }}>
+                                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>สลิปการโอน</h4>
+                                {selectedBooking.paymentSlip ? (
+                                    <div style={{ textAlign: 'center' }}>
+                                        <img
+                                            src={selectedBooking.paymentSlip}
+                                            alt="สลิป"
+                                            style={{
+                                                maxWidth: '100%', maxHeight: '200px',
+                                                borderRadius: 'var(--radius-md)',
+                                                border: '1px solid var(--border-color)',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => window.open(selectedBooking.paymentSlip, '_blank')}
+                                        />
+                                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>ส่งแล้ว รอ Admin ตรวจสอบ</p>
+                                    </div>
+                                ) : (
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>ยังไม่ได้แนบสลิป</p>
+                                )}
+                            </div>
+
+                            {/* Actions */}
+                            <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                {selectedBooking.status === 'pending' && (
+                                    <button
+                                        onClick={() => { setShowQR(selectedBooking); setSelectedBooking(null); }}
+                                        className="btn btn-primary"
+                                        style={{ flex: 1 }}
+                                    >
+                                        ชำระเงิน / แนบสลิป
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setSelectedBooking(null)}
+                                    className="btn btn-secondary"
+                                    style={{ flex: selectedBooking.status === 'pending' ? 'none' : 1 }}
+                                >
+                                    ปิด
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

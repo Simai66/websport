@@ -138,8 +138,8 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                         <div style={{
                             width: '36px', height: '36px', borderRadius: 'var(--radius-md)',
                             background: 'var(--accent-sport)', display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '1.1rem'
-                        }}>💳</div>
+                            justifyContent: 'center', fontSize: '1.1rem', color: 'white', fontWeight: 700
+                        }}>฿</div>
                         <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>ชำระเงิน</h3>
                     </div>
                     <button onClick={onClose} className="qr-payment-close" aria-label="ปิด">✕</button>
@@ -247,7 +247,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                     border: '1px solid var(--border-color)'
                 }}>
                     <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.85rem', textAlign: 'center' }}>
-                        📎 แนบสลิปการโอน
+                        แนบสลิปการโอน
                     </div>
 
                     <input
@@ -303,7 +303,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                                 boxShadow: '0 4px 16px rgba(255, 159, 28, 0.25)'
                             }}
                         >
-                            {uploading ? '⏳ กำลังอัพโหลด...' : '📷 เลือกรูปสลิป'}
+                            {uploading ? 'กำลังอัพโหลด...' : 'เลือกรูปสลิป'}
                         </button>
                     )}
 

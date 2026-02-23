@@ -51,7 +51,7 @@ export default function BookingDetail() {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'confirmed': return <span className="badge badge-success" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>✓ ชำระแล้ว</span>;
-            case 'pending': return <span className="badge badge-warning" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>⏳ รอยืนยัน</span>;
+            case 'pending': return <span className="badge badge-warning" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>○ รอยืนยัน</span>;
             case 'cancelled': return <span className="badge badge-danger" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>✕ ยกเลิก</span>;
             case 'expired': return <span className="badge badge-danger" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>⏱ หมดเวลา</span>;
             default: return <span className="badge">{status}</span>;
@@ -149,7 +149,7 @@ export default function BookingDetail() {
                                 />
                             ) : (
                                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🖼️</div>
+                                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>--</div>
                                     ไม่มีสลิปการโอน
                                 </div>
                             )}

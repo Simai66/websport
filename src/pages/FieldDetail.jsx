@@ -290,7 +290,7 @@ export default function FieldDetail() {
                                 alignItems: 'center',
                                 gap: '0.5rem'
                             }}>
-                                📍 เลือกได้สูงสุด {maxSlots} ชั่วโมงติดต่อกัน
+                                เลือกได้สูงสุด {maxSlots} ชั่วโมงติดต่อกัน
                             </div>
 
                             {/* Calendar */}
@@ -456,7 +456,7 @@ export default function FieldDetail() {
                             textAlign: 'center',
                             borderBottom: '1px solid var(--border-color)'
                         }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎉</div>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem', color: '#22c55e' }}>✓</div>
                             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#22c55e', margin: 0 }}>
                                 ขอบคุณที่จอง!
                             </h2>

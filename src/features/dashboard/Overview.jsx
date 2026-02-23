@@ -47,7 +47,7 @@ export default function Overview() {
             {/* Stats */}
             <div className="admin-stats-grid">
                 <div className="admin-stat-card">
-                    <div className="admin-stat-icon orange">⏳</div>
+                    <div className="admin-stat-icon orange">○</div>
                     <div className="admin-stat-value">{stats.pending}</div>
                     <div className="admin-stat-label">รอชำระเงิน</div>
                 </div>
@@ -62,7 +62,7 @@ export default function Overview() {
                     <div className="admin-stat-label">จองวันนี้</div>
                 </div>
                 <div className="admin-stat-card">
-                    <div className="admin-stat-icon gold">💰</div>
+                    <div className="admin-stat-icon gold">฿</div>
                     <div className="admin-stat-value" style={{ color: 'var(--accent-gold)' }}>฿{formatPrice(stats.totalRevenue)}</div>
                     <div className="admin-stat-label">รายได้รวม</div>
                 </div>
