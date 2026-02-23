@@ -43,6 +43,7 @@ export default function FieldDetail() {
     const [toastType, setToastType] = useState('success');
     const [showQR, setShowQR] = useState(false);
     const [currentBooking, setCurrentBooking] = useState(null);
+    const [showThankYou, setShowThankYou] = useState(false);
 
     const maxSlots = settings.maxHoursPerBooking || 4;
 
@@ -152,6 +153,11 @@ export default function FieldDetail() {
 
     const handleQRClose = () => {
         setShowQR(false);
+        setShowThankYou(true);
+    };
+
+    const handleThankYouClose = () => {
+        setShowThankYou(false);
         setSelectedSlots([]);
         setCustomerName('');
         setCustomerPhone('');
@@ -428,6 +434,106 @@ export default function FieldDetail() {
                     onClose={handleQRClose}
                     onTimeout={handleQRTimeout}
                 />
+            )}
+
+            {/* Thank You Summary Popup */}
+            {showThankYou && currentBooking && (
+                <div className="modal-overlay active" onClick={handleThankYouClose} role="dialog" aria-modal="true">
+                    <div onClick={e => e.stopPropagation()} style={{
+                        background: 'var(--bg-card)',
+                        borderRadius: 'var(--radius-xl)',
+                        border: '1px solid var(--border-color)',
+                        maxWidth: '420px',
+                        width: '90%',
+                        overflow: 'hidden',
+                        boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
+                        animation: 'fadeInUp 0.3s ease'
+                    }}>
+                        {/* Header */}
+                        <div style={{
+                            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05))',
+                            padding: '2rem 1.5rem',
+                            textAlign: 'center',
+                            borderBottom: '1px solid var(--border-color)'
+                        }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎉</div>
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#22c55e', margin: 0 }}>
+                                ขอบคุณที่จอง!
+                            </h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                                การจองของคุณถูกบันทึกเรียบร้อยแล้ว
+                            </p>
+                        </div>
+
+                        {/* Booking Summary */}
+                        <div style={{ padding: '1.5rem' }}>
+                            <div style={{
+                                background: 'var(--bg-secondary)',
+                                borderRadius: 'var(--radius-lg)',
+                                padding: '1.25rem',
+                                marginBottom: '1rem'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>สนาม</span>
+                                    <span style={{ color: 'var(--accent-sport)', fontWeight: 600 }}>{currentBooking.fieldName}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>วันที่</span>
+                                    <span style={{ color: 'var(--text-primary)' }}>{formatDateThai(currentBooking.date)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>เวลา</span>
+                                    <span style={{ color: 'var(--text-primary)' }}>{currentBooking.timeSlot}</span>
+                                </div>
+                                <div style={{
+                                    display: 'flex', justifyContent: 'space-between',
+                                    paddingTop: '0.75rem',
+                                    borderTop: '1px solid var(--border-color)'
+                                }}>
+                                    <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>ราคารวม</span>
+                                    <span style={{
+                                        color: 'var(--accent-sport)',
+                                        fontSize: '1.25rem',
+                                        fontWeight: 700,
+                                        fontFamily: 'var(--font-numbers)'
+                                    }}>
+                                        ฿{formatPrice(currentBooking.totalPrice || currentBooking.price)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style={{
+                                textAlign: 'center',
+                                fontSize: '0.75rem',
+                                color: 'var(--text-muted)',
+                                marginBottom: '1rem'
+                            }}>
+                                รหัสการจอง: <span style={{ fontFamily: 'monospace', color: 'var(--accent-sport)' }}>#{currentBooking.id?.slice(-8).toUpperCase()}</span>
+                            </div>
+
+                            <div style={{
+                                padding: '0.75rem',
+                                background: 'rgba(255, 159, 28, 0.08)',
+                                border: '1px solid rgba(255, 159, 28, 0.15)',
+                                borderRadius: 'var(--radius-md)',
+                                textAlign: 'center',
+                                fontSize: '0.8rem',
+                                color: 'var(--accent-sport)',
+                                marginBottom: '1.25rem'
+                            }}>
+                                รอ Admin ตรวจสอบสลิป สถานะจะเปลี่ยนเป็น "ชำระแล้ว" เมื่ออนุมัติ
+                            </div>
+
+                            <button
+                                onClick={handleThankYouClose}
+                                className="btn btn-primary btn-glow"
+                                style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', fontWeight: 700 }}
+                            >
+                                ดูรายการจองของฉัน →
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {showToast && (
