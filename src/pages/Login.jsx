@@ -39,11 +39,11 @@ export default function Login() {
                 return;
             }
             setLoading(true);
-            const success = await login({ identifier: email.trim(), password });
-            if (success) {
+            const result = await login({ identifier: email.trim(), password });
+            if (result.success) {
                 navigate(from, { replace: true });
             } else {
-                setError('Email หรือ Password ไม่ถูกต้อง');
+                setError(result.message || 'Email หรือ Password ไม่ถูกต้อง');
                 setLoading(false);
             }
         }

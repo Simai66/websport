@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { IoFootball, IoPersonCircle, IoMenu, IoClose, IoLogOut, IoLogIn } from 'react-icons/io5';
+import { IoFootball, IoPersonCircle, IoMenu, IoClose, IoLogOut, IoLogIn, IoGrid } from 'react-icons/io5';
 
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-    const { user, isAuthenticated, loginWithGoogle, logout } = useAuth();
+    const { user, isAuthenticated, isAdmin, loginWithGoogle, logout } = useAuth();
 
     const handleGoogleLogin = async () => {
         setGoogleLoading(true);
@@ -60,6 +60,25 @@ export default function Navbar() {
 
                     {isAuthenticated ? (
                         <>
+                            {/* Dashboard link for admin/owner */}
+                            {isAdmin && (
+                                <NavLink
+                                    to="/dashboard"
+                                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.4rem',
+                                        color: 'var(--accent-gold)',
+                                        fontWeight: 600,
+                                        fontSize: '0.875rem'
+                                    }}
+                                >
+                                    <IoGrid /> Dashboard
+                                </NavLink>
+                            )}
+
                             <NavLink
                                 to="/profile"
                                 className="nav-link"

@@ -19,6 +19,7 @@ import BookingDetail from './features/dashboard/BookingDetail';
 import Fields from './features/dashboard/Fields';
 import Schedule from './features/dashboard/Schedule';
 import SettingsPage from './features/dashboard/Settings';
+import UserManagement from './features/dashboard/UserManagement';
 
 import './index.css';
 
@@ -37,9 +38,9 @@ function App() {
             <Route path="/profile" element={<Profile />} />
           </Route>
 
-          {/* Protected Routes (Dashboard) */}
+          {/* Protected Routes (Dashboard) — Admin/Owner only */}
           <Route path="/dashboard" element={
-            <AuthGuard>
+            <AuthGuard requiredRole="admin">
               <DashboardLayout />
             </AuthGuard>
           }>
@@ -48,6 +49,7 @@ function App() {
             <Route path="bookings/:id" element={<BookingDetail />} />
             <Route path="schedule" element={<Schedule />} />
             <Route path="fields" element={<Fields />} />
+            <Route path="users" element={<UserManagement />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
 

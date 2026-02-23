@@ -7,10 +7,13 @@ import {
     onAuthStateChanged,
     updateProfile
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase';
 
 const AuthContext = createContext(null);
+
+// Owner email — hardcoded as the top-level owner
+const OWNER_EMAIL = 'armxbox27@gmail.com';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -30,14 +33,39 @@ export const AuthProvider = ({ children }) => {
                     role: 'user'
                 };
 
+                // Auto-assign owner role for the owner email
+                const isOwnerEmail = firebaseUser.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+
                 try {
-                    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+                    const userRef = doc(db, 'users', firebaseUser.uid);
+                    const userDoc = await getDoc(userRef);
                     if (userDoc.exists()) {
                         const data = userDoc.data();
                         userData = { ...userData, ...data };
+
+                        // If this is the owner email but role is not 'owner', fix it
+                        if (isOwnerEmail && data.role !== 'owner') {
+                            await updateDoc(userRef, { role: 'owner' });
+                            userData.role = 'owner';
+                        }
+                    } else if (isOwnerEmail) {
+                        // Owner doc doesn't exist yet — create it
+                        const ownerData = {
+                            email: firebaseUser.email,
+                            name: firebaseUser.displayName || 'Owner',
+                            photoURL: firebaseUser.photoURL,
+                            role: 'owner',
+                            createdAt: new Date().toISOString()
+                        };
+                        await setDoc(userRef, ownerData);
+                        userData = { ...userData, ...ownerData };
                     }
                 } catch (err) {
                     console.warn('Could not fetch user data from Firestore:', err);
+                    // Fallback: still mark as owner if email matches
+                    if (isOwnerEmail) {
+                        userData.role = 'owner';
+                    }
                 }
 
                 setUser(userData);
@@ -51,6 +79,10 @@ export const AuthProvider = ({ children }) => {
 
         return () => unsubscribe();
     }, []);
+
+    // Role helpers
+    const isOwner = user?.role === 'owner';
+    const isAdmin = user?.role === 'admin' || user?.role === 'owner';
 
     // Register with phone number (converted to email)
     const register = async (phone, password) => {
@@ -107,11 +139,12 @@ export const AuthProvider = ({ children }) => {
             const userDoc = await getDoc(userRef);
 
             if (!userDoc.exists()) {
+                const isOwnerEmail = result.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
                 await setDoc(userRef, {
                     email: result.user.email,
                     name: result.user.displayName,
                     photoURL: result.user.photoURL,
-                    role: 'user',
+                    role: isOwnerEmail ? 'owner' : 'user',
                     createdAt: new Date().toISOString()
                 });
             }
@@ -125,14 +158,38 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Admin login with email
+    // Admin login with email — checks role after auth
     const login = async (userData) => {
         const { identifier, password } = userData;
         try {
-            await signInWithEmailAndPassword(auth, identifier, password);
-            return true;
+            const cred = await signInWithEmailAndPassword(auth, identifier, password);
+
+            // Check role in Firestore
+            try {
+                const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+                    if (data.role === 'admin' || data.role === 'owner' || isOwnerEmail) {
+                        return { success: true };
+                    }
+                } else {
+                    // If Firestore doc doesn't exist but email is owner
+                    const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+                    if (isOwnerEmail) return { success: true };
+                }
+            } catch (fsErr) {
+                console.warn('Could not verify admin role:', fsErr);
+                // Allow owner email even if Firestore fails
+                const isOwnerEmail = cred.user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+                if (isOwnerEmail) return { success: true };
+            }
+
+            // Not an admin — sign out
+            await signOut(auth);
+            return { success: false, message: 'คุณไม่มีสิทธิ์เข้าระบบแอดมิน' };
         } catch (err) {
-            return false;
+            return { success: false, message: 'Email หรือ Password ไม่ถูกต้อง' };
         }
     };
 
@@ -172,17 +229,51 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Get all users from Firestore (Owner/Admin only)
+    const getAllUsers = async () => {
+        try {
+            const snapshot = await getDocs(collection(db, 'users'));
+            return snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
+        } catch (err) {
+            console.error('Failed to get users:', err);
+            return [];
+        }
+    };
+
+    // Update user role (Owner only)
+    const updateUserRole = async (uid, newRole) => {
+        if (!isOwner) return { success: false, message: 'เฉพาะเจ้าของเท่านั้นที่เปลี่ยน role ได้' };
+        if (newRole === 'owner') return { success: false, message: 'ไม่สามารถตั้งคนอื่นเป็นเจ้าของได้' };
+
+        try {
+            const userRef = doc(db, 'users', uid);
+            const userDoc = await getDoc(userRef);
+            if (userDoc.exists() && userDoc.data().role === 'owner') {
+                return { success: false, message: 'ไม่สามารถเปลี่ยน role ของเจ้าของได้' };
+            }
+
+            await updateDoc(userRef, { role: newRole });
+            return { success: true };
+        } catch (err) {
+            return { success: false, message: err.message };
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
             isAuthenticated,
             loading,
+            isOwner,
+            isAdmin,
             register,
             loginWithPhone,
             loginWithGoogle,
             login,
             logout,
-            updateUserProfile
+            updateUserProfile,
+            getAllUsers,
+            updateUserRole
         }}>
             {children}
         </AuthContext.Provider>
