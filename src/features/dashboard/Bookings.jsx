@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { IoWallet, IoList, IoTimeOutline, IoSearch, IoDocumentText, IoTrash } from 'react-icons/io5';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { getBookings, deleteBooking, expireOverdueBookings, formatPrice } from '../../data';
@@ -113,7 +114,7 @@ export default function Bookings() {
                             <div className="admin-stat-label">รายได้วันนี้</div>
                             <div className="admin-stat-value" style={{ fontSize: '1.5rem' }}>฿{formatPrice(todayRevenue)}</div>
                         </div>
-                        <div className="admin-stat-icon gold" style={{ marginBottom: 0 }}>฿</div>
+                        <div className="admin-stat-icon gold" style={{ marginBottom: 0 }}><IoWallet /></div>
                     </div>
                 </div>
                 <div className="admin-stat-card">
@@ -122,7 +123,7 @@ export default function Bookings() {
                             <div className="admin-stat-label">การจองทั้งหมด</div>
                             <div className="admin-stat-value" style={{ fontSize: '1.5rem' }}>{bookings.length}</div>
                         </div>
-                        <div className="admin-stat-icon blue" style={{ marginBottom: 0 }}>📋</div>
+                        <div className="admin-stat-icon blue" style={{ marginBottom: 0 }}><IoList /></div>
                     </div>
                 </div>
                 <div className="admin-stat-card">
@@ -131,7 +132,7 @@ export default function Bookings() {
                             <div className="admin-stat-label">รออนุมัติ</div>
                             <div className="admin-stat-value" style={{ fontSize: '1.5rem', color: 'var(--accent-sport)' }}>{pendingCount}</div>
                         </div>
-                        <div className="admin-stat-icon orange" style={{ marginBottom: 0 }}>○</div>
+                        <div className="admin-stat-icon orange" style={{ marginBottom: 0 }}><IoTimeOutline /></div>
                     </div>
                 </div>
             </div>
@@ -153,7 +154,7 @@ export default function Bookings() {
                     </button>
                 </div>
                 <div className="admin-search">
-                    <span className="admin-search-icon">🔍</span>
+                    <span className="admin-search-icon"><IoSearch /></span>
                     <input
                         type="text"
                         placeholder="Search by phone number..."
@@ -205,10 +206,10 @@ export default function Bookings() {
                                     <td>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             <Link to={`/dashboard/bookings/${b.id}`} className="btn btn-sm btn-secondary">
-                                                📄
+                                                <IoDocumentText />
                                             </Link>
                                             <button className="btn btn-sm btn-danger" onClick={() => handleDeleteBooking(b.id)}>
-                                                🗑️
+                                                <IoTrash />
                                             </button>
                                         </div>
                                     </td>
