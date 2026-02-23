@@ -236,7 +236,8 @@ export const expireOverdueBookings = () => {
     let changed = false;
 
     bookings.forEach(b => {
-        if (b.status === 'pending' && new Date(b.paymentDeadline) < now) {
+        // Only expire pending bookings that have NO payment slip uploaded
+        if (b.status === 'pending' && !b.paymentSlip && new Date(b.paymentDeadline) < now) {
             b.status = 'expired';
             changed = true;
         }

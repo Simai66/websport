@@ -6,6 +6,8 @@ export default function BookingDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [booking, setBooking] = useState(null);
+    const [confirmAction, setConfirmAction] = useState(null); // 'confirm' | 'reject' | null
+    const [actionDone, setActionDone] = useState('');
 
     useEffect(() => {
         const bookings = getBookings();
@@ -31,20 +33,19 @@ export default function BookingDetail() {
     }
 
     const handleConfirm = () => {
-        if (confirm('ยืนยันการอนุมัติการจองนี้?')) {
-            confirmBookingPayment(booking.id);
-            // Refresh local state
-            setBooking(prev => ({ ...prev, status: 'confirmed' }));
-            alert('อนุมัติการจองเรียบร้อย');
-        }
+        confirmBookingPayment(booking.id);
+        setBooking(prev => ({ ...prev, status: 'confirmed' }));
+        setConfirmAction(null);
+        setActionDone('อนุมัติการจองเรียบร้อย ✓');
+        setTimeout(() => setActionDone(''), 3000);
     };
 
     const handleReject = () => {
-        if (confirm('ยืนยันการปฏิเสธ/ยกเลิกการจองนี้?')) {
-            cancelBooking(booking.id);
-            setBooking(prev => ({ ...prev, status: 'cancelled' }));
-            alert('ปฏิเสธการจองเรียบร้อย');
-        }
+        cancelBooking(booking.id);
+        setBooking(prev => ({ ...prev, status: 'cancelled' }));
+        setConfirmAction(null);
+        setActionDone('ปฏิเสธการจองเรียบร้อย');
+        setTimeout(() => setActionDone(''), 3000);
     };
 
     const getStatusBadge = (status) => {
@@ -159,22 +160,66 @@ export default function BookingDetail() {
                     <div style={{ flex: 1, minWidth: '300px' }}>
                         <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>ตรวจสอบสลิปและดำเนินการ</h4>
 
+                        {actionDone && (
+                            <div style={{
+                                padding: '0.75rem 1rem', marginBottom: '1rem',
+                                background: 'rgba(34, 197, 94, 0.15)',
+                                border: '1px solid rgba(34, 197, 94, 0.3)',
+                                borderRadius: 'var(--radius-md)',
+                                color: '#22c55e', textAlign: 'center', fontWeight: 600
+                            }}>
+                                {actionDone}
+                            </div>
+                        )}
+
                         {booking.status === 'pending' ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <button
-                                    onClick={handleConfirm}
-                                    className="btn btn-success btn-lg"
-                                    style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
-                                >
-                                    ✓ อนุมัติการจอง
-                                </button>
-                                <button
-                                    onClick={handleReject}
-                                    className="btn btn-danger btn-lg"
-                                    style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
-                                >
-                                    ✕ ปฏิเสธการจอง
-                                </button>
+                                {confirmAction ? (
+                                    <div style={{
+                                        padding: '1.25rem',
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        border: '1px solid var(--border-color)',
+                                        textAlign: 'center'
+                                    }}>
+                                        <p style={{ marginBottom: '1rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                                            {confirmAction === 'confirm' ? 'ยืนยันการอนุมัติการจองนี้?' : 'ยืนยันการปฏิเสธการจองนี้?'}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                                            <button
+                                                onClick={confirmAction === 'confirm' ? handleConfirm : handleReject}
+                                                className={`btn ${confirmAction === 'confirm' ? 'btn-success' : 'btn-danger'}`}
+                                                style={{ padding: '0.6rem 1.5rem' }}
+                                            >
+                                                ✓ ยืนยัน
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmAction(null)}
+                                                className="btn btn-secondary"
+                                                style={{ padding: '0.6rem 1.5rem' }}
+                                            >
+                                                ยกเลิก
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setConfirmAction('confirm')}
+                                            className="btn btn-success btn-lg"
+                                            style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
+                                        >
+                                            ✓ อนุมัติการจอง
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmAction('reject')}
+                                            className="btn btn-danger btn-lg"
+                                            style={{ width: '100%', justifyContent: 'center', padding: '1rem' }}
+                                        >
+                                            ✕ ปฏิเสธการจอง
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <div style={{
