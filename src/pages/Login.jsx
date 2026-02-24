@@ -48,10 +48,8 @@ export default function Login() {
     };
 
     return (
-        <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            minHeight: '70vh', padding: '2rem 1rem', paddingTop: '120px'
-        }}>
+        <div className="auth-page-wrapper">
+            <div className="auth-glow-bg"></div>
             <div className="premium-card register-card" style={{ padding: '2.5rem', width: '100%', maxWidth: '420px' }}>
                 <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
                     เข้าสู่ระบบ

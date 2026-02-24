@@ -72,10 +72,8 @@ export default function Register() {
 
     if (success) {
         return (
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                minHeight: '70vh', padding: '2rem 1rem', paddingTop: '120px'
-            }}>
+            <div className="auth-page-wrapper">
+                <div className="auth-glow-bg"></div>
                 <div className="premium-card register-card" style={{ padding: '3rem', width: '100%', maxWidth: '440px', textAlign: 'center' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--accent-sport)' }}><HiSparkles /></div>
                     <h2 className="gradient-text" style={{ fontSize: '1.5rem', marginBottom: '0.75rem' }}>สมัครสมาชิกสำเร็จ!</h2>
@@ -94,10 +92,8 @@ export default function Register() {
     }
 
     return (
-        <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            minHeight: '70vh', padding: '2rem 1rem', paddingTop: '120px'
-        }}>
+        <div className="auth-page-wrapper">
+            <div className="auth-glow-bg"></div>
             <div className="premium-card register-card" style={{ padding: '2.5rem', width: '100%', maxWidth: '440px' }}>
                 <h1 className="gradient-text" style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '1.75rem' }}>
                     สมัครสมาชิก
@@ -156,8 +152,11 @@ export default function Register() {
 
                     {/* Phone (optional) */}
                     <div>
-                        <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                            <IoCall style={{ verticalAlign: '-0.1em' }} /> เบอร์โทรศัพท์ <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>(ไม่บังคับ)</span>
+                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <IoCall style={{ marginRight: '0.25rem' }} /> เบอร์โทรศัพท์
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 'normal', marginLeft: '0.25rem' }}>
+                                (ไม่บังคับ)
+                            </span>
                         </label>
                         <input
                             type="tel"

@@ -119,6 +119,7 @@ export const AuthProvider = ({ children }) => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             return { success: true };
+        // eslint-disable-next-line no-unused-vars
         } catch (err) {
             return { success: false, message: 'อีเมล หรือ รหัสผ่านไม่ถูกต้อง' };
         }
@@ -273,4 +274,5 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

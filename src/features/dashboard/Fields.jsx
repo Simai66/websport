@@ -20,7 +20,10 @@ export default function Fields() {
     });
 
     useEffect(() => {
-        setFieldsList(getFields());
+        const timeoutId = setTimeout(() => {
+            setFieldsList(getFields());
+        }, 0);
+        return () => clearTimeout(timeoutId);
     }, []);
 
     const openAddFieldModal = () => {

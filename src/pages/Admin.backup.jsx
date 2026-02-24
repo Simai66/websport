@@ -6,7 +6,7 @@ import {
     getFields, addField, updateField, deleteField,
     getSettings, saveSettings,
     fieldTypes,
-    formatDateThai, formatPrice
+    formatPrice
 } from '../data';
 
 export default function Admin() {
@@ -41,13 +41,18 @@ export default function Admin() {
     };
 
     useEffect(() => {
-        loadData();
+        const timeoutId = setTimeout(() => {
+            loadData();
+        }, 0);
         // Check for expired bookings every 30 seconds
         const interval = setInterval(() => {
             expireOverdueBookings();
             setBookings(getBookings().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }, 30000);
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(timeoutId);
+            clearInterval(interval);
+        };
     }, []);
 
     const handleConfirmPayment = (bookingId) => {

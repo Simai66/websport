@@ -14,7 +14,7 @@ export default function MarketingLayout() {
             </div>
 
             <Navbar />
-            <main style={{ flex: 1 }}>
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Outlet />
             </main>
             <Footer />

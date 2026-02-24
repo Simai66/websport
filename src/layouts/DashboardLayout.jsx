@@ -99,7 +99,7 @@ export default function DashboardLayout() {
                             fontSize: '0.9rem'
                         }}
                     >
-                        <IoLogOut />
+                        <IoLogOut style={{ fontSize: '1.25rem' }} />
                         {sidebarOpen && 'ออกจากระบบ'}
                     </button>
                 </div>
@@ -141,7 +141,20 @@ export default function DashboardLayout() {
                             fontWeight: 700
                         }}>
                             {user?.photoURL ? (
-                                <img src={user.photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <>
+                                    <img 
+                                        src={user.photoURL} 
+                                        alt="" 
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextElementSibling.style.display = 'flex';
+                                        }}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                    />
+                                    <span style={{ display: 'none', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                        {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                                    </span>
+                                </>
                             ) : (
                                 user?.name?.charAt(0)?.toUpperCase() || 'A'
                             )}

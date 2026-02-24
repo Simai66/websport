@@ -1,4 +1,5 @@
-import { IoFootball } from 'react-icons/io5';
+import { IoFootball, IoLogoFacebook, IoLogoInstagram } from 'react-icons/io5';
+import { FaLine } from 'react-icons/fa6';
 
 export default function Footer() {
     return (
@@ -21,9 +22,9 @@ export default function Footer() {
                     </div>
 
                     <div className="footer-social">
-                        <a href="#" className="footer-social-link">f</a>
-                        <a href="#" className="footer-social-link">IG</a>
-                        <a href="#" className="footer-social-link">LINE</a>
+                        <a href="#" className="footer-social-link" aria-label="Facebook"><IoLogoFacebook /></a>
+                        <a href="#" className="footer-social-link" aria-label="Instagram"><IoLogoInstagram /></a>
+                        <a href="#" className="footer-social-link" aria-label="LINE"><FaLine /></a>
                     </div>
 
                     <p className="footer-text">

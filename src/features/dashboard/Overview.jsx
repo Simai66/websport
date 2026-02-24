@@ -80,8 +80,8 @@ export default function Overview() {
                                 <th>ผู้จอง</th>
                                 <th>วันที่</th>
                                 <th>เวลา</th>
-                                <th>ยอด</th>
-                                <th>สถานะ</th>
+                                <th style={{ textAlign: 'right' }}>ยอด</th>
+                                <th style={{ textAlign: 'center' }}>สถานะ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -103,8 +103,8 @@ export default function Overview() {
                                     <td>
                                         <div className="date-cell-time">{b.timeSlot}</div>
                                     </td>
-                                    <td style={{ fontWeight: 600 }}>฿{formatPrice(b.totalPrice || b.price)}</td>
-                                    <td><StatusBadge status={b.status} /></td>
+                                    <td style={{ fontWeight: 600, textAlign: 'right', fontFamily: 'var(--font-numbers)' }}>฿{formatPrice(b.totalPrice || b.price)}</td>
+                                    <td style={{ textAlign: 'center' }}><StatusBadge status={b.status} /></td>
                                 </tr>
                             ))}
                             {recentBookings.length === 0 && (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { IoSearch, IoPeople, IoShield, IoPersonCircle, IoCheckmarkCircle, IoCloseCircle } from 'react-icons/io5';
 import { MdAdminPanelSettings } from 'react-icons/md';
@@ -12,16 +12,19 @@ export default function UserManagement() {
     const [toast, setToast] = useState(null);
     const [confirmAction, setConfirmAction] = useState(null);
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
-
-    const loadUsers = async () => {
+    const loadUsers = useCallback(async () => {
         setLoading(true);
         const allUsers = await getAllUsers();
         setUsers(allUsers);
         setLoading(false);
-    };
+    }, [getAllUsers]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            loadUsers();
+        }, 0);
+        return () => clearTimeout(timeoutId);
+    }, [loadUsers]);
 
     const handleRoleChange = async (uid, newRole) => {
         setConfirmAction(null);
@@ -163,9 +166,45 @@ export default function UserManagement() {
                                     flexShrink: 0
                                 }}>
                                     {u.photoURL ? (
-                                        <img src={u.photoURL} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        <>
+                                            <img 
+                                                src={u.photoURL} 
+                                                alt="" 
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.style.display = 'none';
+                                                    e.target.nextElementSibling.style.display = 'flex';
+                                                }}
+                                            />
+                                            <div style={{ 
+                                                display: 'none', 
+                                                width: '100%', 
+                                                height: '100%', 
+                                                background: 'var(--accent-sport)', 
+                                                color: '#fff', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center', 
+                                                fontSize: '18px', 
+                                                fontWeight: 'bold' 
+                                            }}>
+                                                {u.name?.charAt(0)?.toUpperCase() || u.email?.charAt(0)?.toUpperCase() || 'U'}
+                                            </div>
+                                        </>
                                     ) : (
-                                        <IoPersonCircle style={{ fontSize: '2.5rem', color: 'var(--text-muted)' }} />
+                                        <div style={{ 
+                                            width: '100%', 
+                                            height: '100%', 
+                                            background: 'var(--accent-sport)', 
+                                            color: '#fff', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            fontSize: '18px', 
+                                            fontWeight: 'bold' 
+                                        }}>
+                                            {u.name?.charAt(0)?.toUpperCase() || u.email?.charAt(0)?.toUpperCase() || 'U'}
+                                        </div>
                                     )}
                                 </div>
 

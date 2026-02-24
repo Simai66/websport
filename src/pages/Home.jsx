@@ -55,15 +55,18 @@ export default function Home() {
     const [liveStats, setLiveStats] = useState({ fields: 0, bookings: 0, confirmed: 0 });
 
     useEffect(() => {
-        const loadedFields = getFields();
-        setFields(loadedFields);
-        const bookings = getBookings();
-        const confirmed = bookings.filter(b => b.status === 'confirmed').length;
-        setLiveStats({
-            fields: loadedFields.length,
-            bookings: bookings.length,
-            confirmed
-        });
+        const timeoutId = setTimeout(() => {
+            const loadedFields = getFields();
+            setFields(loadedFields);
+            const bookings = getBookings();
+            const confirmed = bookings.filter(b => b.status === "confirmed").length;
+            setLiveStats({
+                fields: loadedFields.length,
+                bookings: bookings.length,
+                confirmed
+            });
+        }, 0);
+        return () => clearTimeout(timeoutId);
     }, []);
 
     const filteredFields = fields.filter(field => {
@@ -216,7 +219,7 @@ export default function Home() {
             <section id="fields" className="section">
                 <div className="container">
                     <h2 className="section-title">สนามกีฬาของเรา</h2>
-                    <p className="section-description">
+                    <p className="section-description" style={{ marginBottom: '1.5rem' }}>
                         เลือกสนามที่เหมาะกับคุณ พร้อมสิ่งอำนวยความสะดวกครบครัน
                     </p>
 

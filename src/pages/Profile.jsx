@@ -24,8 +24,11 @@ export default function Profile() {
 
     useEffect(() => {
         if (user) {
-            setName(user.name || '');
-            setPhone(user.phone || '');
+            const timeoutId = setTimeout(() => {
+                setName(user.name || '');
+                setPhone(user.phone || '');
+            }, 0);
+            return () => clearTimeout(timeoutId);
         }
     }, [user]);
 

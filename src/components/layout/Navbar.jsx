@@ -92,18 +92,52 @@ export default function Navbar() {
                                 }}
                             >
                                 {user?.photoURL ? (
-                                    <img
-                                        src={user.photoURL}
-                                        alt=""
-                                        style={{
-                                            width: 24,
-                                            height: 24,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover'
-                                        }}
-                                    />
+                                    <>
+                                        <img
+                                            src={user.photoURL}
+                                            alt=""
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.style.display = 'none';
+                                                e.target.nextElementSibling.style.display = 'flex';
+                                            }}
+                                            style={{
+                                                width: 24,
+                                                height: 24,
+                                                borderRadius: '50%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                        <div style={{ 
+                                            display: 'none', 
+                                            width: 24, 
+                                            height: 24, 
+                                            borderRadius: '50%', 
+                                            background: 'var(--accent-sport)', 
+                                            color: '#fff', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            fontSize: '12px', 
+                                            fontWeight: 'bold' 
+                                        }}>
+                                            {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                        </div>
+                                    </>
                                 ) : (
-                                    <IoPersonCircle style={{ fontSize: '1.25rem' }} />
+                                    <div style={{ 
+                                        width: 24, 
+                                        height: 24, 
+                                        borderRadius: '50%', 
+                                        background: 'var(--accent-sport)', 
+                                        color: '#fff', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        fontSize: '12px', 
+                                        fontWeight: 'bold' 
+                                    }}>
+                                        {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
                                 )}
                                 {user?.name || user?.phone || 'User'}
                             </NavLink>

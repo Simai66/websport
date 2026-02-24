@@ -146,7 +146,7 @@ export default function MyBookings() {
                         padding: '0.35rem 0.35rem 0.35rem 1.25rem',
                         alignItems: 'center'
                     }}>
-                        <span style={{ color: 'var(--text-muted)', marginRight: '0.5rem', fontSize: '1rem', display: 'flex' }}><IoCall /></span>
+                        <span style={{ color: 'var(--text-muted)', marginRight: '0.6rem', fontSize: '1.2rem', display: 'flex' }}><IoCall /></span>
                         <input
                             type="tel"
                             placeholder="Enter Phone Number..."
@@ -182,7 +182,7 @@ export default function MyBookings() {
                                 transition: 'opacity 0.2s'
                             }}
                         >
-                            <IoSearch style={{ verticalAlign: '-0.1em' }} /> Search
+                            <IoSearch style={{ verticalAlign: '-0.1em', fontSize: '0.9em' }} /> Search
                         </button>
                     </div>
 
@@ -394,7 +394,7 @@ export default function MyBookings() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="empty-state" style={{ padding: '2rem' }}>
+                                <div className="empty-state">
                                     <div className="empty-state-icon">{filter === 'upcoming' ? <IoCalendar /> : <HiClipboardList />}</div>
                                     <h3 className="empty-state-title">
                                         {filter === 'upcoming' ? 'ไม่มีการจองที่กำลังจะถึง' : 'ไม่มีประวัติการจอง'}
@@ -418,7 +418,7 @@ export default function MyBookings() {
                     )}
 
                     {!searched && (
-                        <div className="empty-state" style={{ padding: '2rem' }}>
+                        <div className="empty-state">
                             <div className="empty-state-icon"><IoSearch /></div>
                             <h3 className="empty-state-title">กรอกเบอร์โทรศัพท์เพื่อค้นหา</h3>
                             <p className="empty-state-description">

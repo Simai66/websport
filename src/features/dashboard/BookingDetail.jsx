@@ -10,16 +10,28 @@ export default function BookingDetail() {
     const [actionDone, setActionDone] = useState('');
 
     useEffect(() => {
-        const bookings = getBookings();
-        const found = bookings.find(b => b.id === id);
-        if (found) {
-            setBooking(found);
-        } else {
-            // Fallback for short ID or if not found immediately
-            const foundByShortId = bookings.find(b => b.id.endsWith(id));
-            if (foundByShortId) setBooking(foundByShortId);
-        }
+        const loadBooking = () => {
+            const bookings = getBookings();
+            const found = bookings.find(b => b.id === id);
+            if (found) {
+                setBooking(found);
+            } else {
+                // Fallback for short ID or if not found immediately
+                const foundByShortId = bookings.find(b => b.id.endsWith(id));
+                if (foundByShortId) setBooking(foundByShortId);
+            }
+        };
+        const timeoutId = setTimeout(loadBooking, 0);
+        return () => clearTimeout(timeoutId);
     }, [id]);
+
+    useEffect(() => {
+        let timeout;
+        if (actionDone) {
+            timeout = setTimeout(() => setActionDone(''), 3000);
+        }
+        return () => clearTimeout(timeout);
+    }, [actionDone]);
 
     if (!booking) {
         return (
@@ -37,7 +49,6 @@ export default function BookingDetail() {
         setBooking(prev => ({ ...prev, status: 'confirmed' }));
         setConfirmAction(null);
         setActionDone('อนุมัติการจองเรียบร้อย ✓');
-        setTimeout(() => setActionDone(''), 3000);
     };
 
     const handleReject = () => {
@@ -45,7 +56,6 @@ export default function BookingDetail() {
         setBooking(prev => ({ ...prev, status: 'cancelled' }));
         setConfirmAction(null);
         setActionDone('ปฏิเสธการจองเรียบร้อย');
-        setTimeout(() => setActionDone(''), 3000);
     };
 
     const getStatusBadge = (status) => {
@@ -141,12 +151,19 @@ export default function BookingDetail() {
                             justifyContent: 'center'
                         }}>
                             {booking.paymentSlip ? (
-                                <img
-                                    src={booking.paymentSlip}
-                                    alt="Payment Slip"
-                                    style={{ width: '100%', display: 'block' }}
-                                    onClick={() => window.open(booking.paymentSlip, '_blank')}
-                                />
+                                <a 
+                                    href={booking.paymentSlip} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    aria-label="ดูสลิปโอนเงินขนาดใหญ่"
+                                    style={{ display: 'block', width: '100%', cursor: 'zoom-in' }}
+                                >
+                                    <img
+                                        src={booking.paymentSlip}
+                                        alt="Payment Slip"
+                                        style={{ width: '100%', display: 'block' }}
+                                    />
+                                </a>
                             ) : (
                                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                                     <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>--</div>
@@ -166,7 +183,7 @@ export default function BookingDetail() {
                                 background: 'rgba(34, 197, 94, 0.15)',
                                 border: '1px solid rgba(34, 197, 94, 0.3)',
                                 borderRadius: 'var(--radius-md)',
-                                color: '#22c55e', textAlign: 'center', fontWeight: 600
+                                color: 'var(--color-success, #22c55e)', textAlign: 'center', fontWeight: 600
                             }}>
                                 {actionDone}
                             </div>

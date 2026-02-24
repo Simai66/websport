@@ -364,6 +364,10 @@ ol {
   white-space: nowrap;
 }
 
+.btn:active:not(:disabled) {
+  transform: scale(0.96) translateY(0);
+}
+
 .btn-lg {
   padding: 1rem 2rem;
   font-size: 1.125rem;
@@ -385,6 +389,10 @@ ol {
   box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.4);
 }
 
+.btn-primary:active:not(:disabled) {
+  box-shadow: var(--shadow-sm), 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
 .btn-secondary {
   background: var(--bg-glass);
   color: var(--text-primary);
@@ -394,6 +402,11 @@ ol {
 .btn-secondary:hover {
   background: var(--bg-glass-strong);
   border-color: var(--border-color-strong);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background: var(--bg-card);
+  border-color: var(--border-color);
 }
 
 .btn-success {
@@ -406,6 +419,10 @@ ol {
   transform: translateY(-2px);
 }
 
+.btn-success:active:not(:disabled) {
+  background: #047857;
+}
+
 .btn-danger {
   background: var(--danger-500);
   color: white;
@@ -416,6 +433,10 @@ ol {
   transform: translateY(-2px);
 }
 
+.btn-danger:active:not(:disabled) {
+  background: #b91c1c;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
@@ -424,6 +445,10 @@ ol {
 .btn-ghost:hover {
   color: var(--text-primary);
   background: var(--bg-glass);
+}
+
+.btn-ghost:active:not(:disabled) {
+  background: var(--bg-glass-strong);
 }
 
 .btn:disabled {
@@ -441,6 +466,9 @@ ol {
   border-radius: var(--radius-xl);
   overflow: hidden;
   transition: var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card:hover {
@@ -482,7 +510,7 @@ ol {
 }
 
 .card-body {
-  padding: 1.25rem;
+  padding: 1.5rem;
 }
 
 .card-title {
@@ -566,6 +594,45 @@ ol {
   .grid-cols-4 {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+/* =====================================================
+   Empty State
+   ===================================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.empty-state-icon {
+  font-size: 3.5rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-description {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
 }
 
 /* =====================================================
@@ -1414,24 +1481,47 @@ ol {
    ===================================================== */
 .empty-state {
   text-align: center;
-  padding: 3rem;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color-strong);
+  border-radius: var(--radius-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem auto;
+  max-width: 600px;
 }
 
 .empty-state-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  font-size: 4.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent-sport);
+  opacity: 0.8;
+  background: var(--bg-glass);
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 40px rgba(255, 107, 53, 0.1);
 }
 
 .empty-state-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
 }
 
 .empty-state-description {
-  color: var(--text-secondary);
-  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  max-width: 400px;
+  line-height: 1.6;
 }
 
 /* =====================================================
@@ -1936,6 +2026,7 @@ ol {
   background: var(--bg-glass);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
+  font-size: 1.25rem;
   transition: all 0.3s ease;
 }
 
@@ -1945,6 +2036,14 @@ ol {
   transform: translateY(-3px);
   box-shadow: 0 0 15px var(--accent-sport-glow);
   border-color: var(--accent-sport);
+}
+
+.footer-social-link:active {
+  background: var(--accent-sport);
+  color: white;
+  border-color: var(--accent-sport);
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 0 5px var(--accent-sport-glow);
 }
 
 /* =====================================================
@@ -2307,13 +2406,15 @@ ol {
 
 .how-it-works-number {
   position: absolute;
-  top: 0;
-  right: 1rem;
+  top: -1.5rem;
+  right: 0.5rem;
   font-family: var(--font-numbers);
-  font-size: 3rem;
-  font-weight: 700;
-  color: rgba(255, 107, 53, 0.452);
+  font-size: 5.5rem;
+  font-weight: 800;
+  color: rgba(255, 107, 53, 0.1);
   line-height: 1;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .how-it-works-icon {
@@ -2328,6 +2429,8 @@ ol {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-2xl);
   transition: var(--transition-base);
+  position: relative;
+  z-index: 1;
 }
 
 .how-it-works-step:hover .how-it-works-icon {
@@ -2341,21 +2444,25 @@ ol {
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
+  position: relative;
+  z-index: 1;
 }
 
 .how-it-works-desc {
   font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
 
 .how-it-works-connector {
   display: flex;
   align-items: center;
   padding-top: 2rem;
-  color: var(--border-color-strong);
+  color: var(--accent-sport);
   font-size: 1.5rem;
-  opacity: 0.4;
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
@@ -3328,10 +3435,36 @@ ol {
 }
 
 /* =====================================================
-   Register Page
+   Auth Pages (Login/Register)
    ===================================================== */
+.auth-page-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 120px 1rem 4rem 1rem;
+  position: relative;
+  width: 100%;
+}
+
+.auth-glow-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 800px;
+  height: 600px;
+  background: radial-gradient(circle at center, rgba(255, 107, 53, 0.15) 0%, rgba(212, 175, 55, 0.05) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .register-card {
   animation: registerSlideUp 0.5s ease-out;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 107, 53, 0.1);
 }
 
 @keyframes registerSlideUp {
