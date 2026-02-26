@@ -201,7 +201,7 @@ export default function Fields() {
                 <div className="modal-overlay active" onClick={() => setShowFieldModal(false)} role="dialog" aria-modal="true" aria-label={editingField ? 'แก้ไขสนาม' : 'เพิ่มสนามใหม่'} style={{
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
                 }}>
-                    <div className="modal premium-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%', padding: '1.5rem', background: 'var(--bg-card)' }}>
+                    <div className="modal premium-card" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', width: '90%', padding: '1.5rem', background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
                         <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <h3 className="modal-title" style={{ margin: 0 }}>{editingField ? '✏️ แก้ไขสนาม' : '➕ เพิ่มสนามใหม่'}</h3>
                             <button className="modal-close" onClick={() => setShowFieldModal(false)} aria-label="ปิด" style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
