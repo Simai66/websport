@@ -13,8 +13,8 @@ export default function Overview() {
     const [recentBookings, setRecentBookings] = useState([]);
 
     useEffect(() => {
-        const loadData = () => {
-            const bookings = getBookings();
+        const loadData = async () => {
+            const bookings = await getBookings();
             const pending = bookings.filter(b => b.status === 'pending').length;
             const confirmed = bookings.filter(b => b.status === 'confirmed').length;
             const totalRevenue = bookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + (b.totalPrice || b.price || 0), 0);

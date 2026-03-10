@@ -15,28 +15,26 @@ export default function Bookings() {
     const [search, setSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
 
-    const loadData = useCallback(() => {
-        expireOverdueBookings();
-        setBookings(getBookings().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    const loadData = useCallback(async () => {
+        await expireOverdueBookings();
+        const allBookings = await getBookings();
+        setBookings(allBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     }, []);
 
     useEffect(() => {
-        const timeoutId = setTimeout(loadData, 0);
+        loadData();
         const interval = setInterval(loadData, 30000);
-        return () => {
-            clearTimeout(timeoutId);
-            clearInterval(interval);
-        };
+        return () => clearInterval(interval);
     }, [loadData]);
 
     const handleDeleteBooking = (bookingId) => {
         setConfirmState({ isOpen: true, bookingId });
     };
 
-    const confirmDelete = () => {
-        deleteBooking(confirmState.bookingId);
+    const confirmDelete = async () => {
+        await deleteBooking(confirmState.bookingId);
         setConfirmState({ isOpen: false, bookingId: null });
-        loadData();
+        await loadData();
     };
 
     // Counts

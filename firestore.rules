@@ -22,10 +22,28 @@ service cloud.firestore {
       allow update: if request.auth != null 
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
     }
-    
-    // Other collections — keep open for now (with expiry)
-    match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 3, 24);
+
+    // Fields — anyone can read, admin/owner can write
+    match /fields/{fieldId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
+    }
+
+    // Bookings — anyone can read and create, only booking owner or admin can update, only admin can delete
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
+    }
+
+    // Settings — anyone can read, admin/owner can write
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'owner'];
     }
   }
 }

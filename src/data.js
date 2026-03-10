@@ -1,5 +1,13 @@
-// Default sports fields data
-const defaultFields = [
+import { db } from './firebase';
+import {
+    collection, doc, getDocs, getDoc, updateDoc, deleteDoc, setDoc,
+    query, where
+} from 'firebase/firestore';
+
+// ========== Constants (synchronous — no change needed) ==========
+
+// Default sports fields data (used for seeding only)
+export const defaultFields = [
     {
         id: 'field-1',
         name: 'สนามฟุตบอล A',
@@ -56,59 +64,6 @@ const defaultFields = [
     }
 ];
 
-// LocalStorage keys
-const FIELDS_KEY = 'sports_fields';
-
-// Initialize fields in localStorage if not exists
-const initializeFields = () => {
-    if (!localStorage.getItem(FIELDS_KEY)) {
-        localStorage.setItem(FIELDS_KEY, JSON.stringify(defaultFields));
-    }
-};
-
-// Get all fields
-export const getFields = () => {
-    initializeFields();
-    const data = localStorage.getItem(FIELDS_KEY);
-    return data ? JSON.parse(data) : defaultFields;
-};
-
-// Save fields
-export const saveFields = (fields) => {
-    localStorage.setItem(FIELDS_KEY, JSON.stringify(fields));
-};
-
-// Add new field
-export const addField = (field) => {
-    const fields = getFields();
-    const newField = {
-        ...field,
-        id: `field-${Date.now()}`
-    };
-    fields.push(newField);
-    saveFields(fields);
-    return newField;
-};
-
-// Update field
-export const updateField = (fieldId, updatedData) => {
-    const fields = getFields();
-    const index = fields.findIndex(f => f.id === fieldId);
-    if (index !== -1) {
-        fields[index] = { ...fields[index], ...updatedData };
-        saveFields(fields);
-        return fields[index];
-    }
-    return null;
-};
-
-// Delete field
-export const deleteField = (fieldId) => {
-    const fields = getFields();
-    const filtered = fields.filter(f => f.id !== fieldId);
-    saveFields(filtered);
-};
-
 // For backward compatibility
 export const sportsFields = defaultFields;
 
@@ -121,7 +76,7 @@ export const fieldTypes = [
     { id: 'tennis', name: 'เทนนิส' }
 ];
 
-// Type label lookup (for FieldCard, FieldDetail, etc.)
+// Type label lookup
 export const typeLabels = {
     football: 'ฟุตบอล',
     badminton: 'แบดมินตัน',
@@ -131,178 +86,284 @@ export const typeLabels = {
 
 // Time slots
 export const timeSlots = [
-    '08:00-09:00',
-    '09:00-10:00',
-    '10:00-11:00',
-    '11:00-12:00',
-    '12:00-13:00',
-    '13:00-14:00',
-    '14:00-15:00',
-    '15:00-16:00',
-    '16:00-17:00',
-    '17:00-18:00',
-    '18:00-19:00',
-    '19:00-20:00',
-    '20:00-21:00',
-    '21:00-22:00'
+    '08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00',
+    '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00',
+    '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00',
+    '20:00-21:00', '21:00-22:00'
 ];
-
-// LocalStorage keys
-const BOOKINGS_KEY = 'sports_bookings';
-const SETTINGS_KEY = 'sports_settings';
 
 // Default settings
 const defaultSettings = {
-    promptPayNumber: '0972917189', // เบอร์ PromptPay
+    promptPayNumber: '0972917189',
     promptPayName: 'ภาณุวัฒน์ เวยรัมย์',
-    customQRImage: '', // URL รูป QR ของตัวเอง (ถ้าว่างจะ generate)
+    customQRImage: '',
     bookingTimeoutMinutes: 10,
     maxHoursPerBooking: 4
-};
-
-// Get settings
-export const getSettings = () => {
-    const data = localStorage.getItem(SETTINGS_KEY);
-    return data ? { ...defaultSettings, ...JSON.parse(data) } : defaultSettings;
-};
-
-// Save settings
-export const saveSettings = (settings) => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-};
-
-// Get all bookings
-export const getBookings = () => {
-    const data = localStorage.getItem(BOOKINGS_KEY);
-    return data ? JSON.parse(data) : [];
-};
-
-// Save bookings
-export const saveBookings = (bookings) => {
-    localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
-};
-
-// Add new booking (supports multiple slots)
-export const addBooking = (booking) => {
-    const bookings = getBookings();
-    const settings = getSettings();
-    const now = new Date();
-    const deadline = new Date(now.getTime() + settings.bookingTimeoutMinutes * 60000);
-
-    const newBooking = {
-        ...booking,
-        id: `booking-${Date.now()}`,
-        status: 'pending', // pending -> confirmed/expired/cancelled
-        slots: booking.slots || [booking.timeSlot], // Support array of slots
-        totalPrice: booking.totalPrice || booking.price,
-        createdAt: now.toISOString(),
-        paymentDeadline: deadline.toISOString()
-    };
-    bookings.push(newBooking);
-    saveBookings(bookings);
-    return newBooking;
-};
-
-// Confirm payment (admin)
-export const confirmBookingPayment = (bookingId) => {
-    const bookings = getBookings();
-    const index = bookings.findIndex(b => b.id === bookingId);
-    if (index !== -1 && bookings[index].status === 'pending') {
-        bookings[index].status = 'confirmed';
-        bookings[index].confirmedAt = new Date().toISOString();
-        saveBookings(bookings);
-        return true;
-    }
-    return false;
-};
-
-// Upload payment slip
-export const uploadPaymentSlip = (bookingId, slipData) => {
-    const bookings = getBookings();
-    const index = bookings.findIndex(b => b.id === bookingId);
-    if (index !== -1) {
-        bookings[index].paymentSlip = slipData;
-        bookings[index].slipUploadedAt = new Date().toISOString();
-        saveBookings(bookings);
-        return true;
-    }
-    return false;
-};
-
-// Check and expire overdue bookings
-export const expireOverdueBookings = () => {
-    const bookings = getBookings();
-    const now = new Date();
-    let changed = false;
-
-    bookings.forEach(b => {
-        // Only expire pending bookings that have NO payment slip uploaded
-        if (b.status === 'pending' && !b.paymentSlip && new Date(b.paymentDeadline) < now) {
-            b.status = 'expired';
-            changed = true;
-        }
-    });
-
-    if (changed) saveBookings(bookings);
-    return changed;
-};
-
-// Cancel booking
-export const cancelBooking = (bookingId) => {
-    const bookings = getBookings();
-    const index = bookings.findIndex(b => b.id === bookingId);
-    if (index !== -1) {
-        bookings[index].status = 'cancelled';
-        saveBookings(bookings);
-        return true;
-    }
-    return false;
-};
-
-// Delete booking (admin)
-export const deleteBooking = (bookingId) => {
-    const bookings = getBookings();
-    const filtered = bookings.filter(b => b.id !== bookingId);
-    saveBookings(filtered);
-};
-
-// Check if time slot is booked
-export const isSlotBooked = (fieldId, date, timeSlot) => {
-    const bookings = getBookings();
-    return bookings.some(b => {
-        if (b.fieldId !== fieldId || b.date !== date) return false;
-        if (b.status === 'cancelled' || b.status === 'expired') return false;
-        // Check both single slot and multi-slot bookings
-        const slots = b.slots || [b.timeSlot];
-        return slots.includes(timeSlot);
-    });
-};
-
-// Get bookings by phone
-export const getBookingsByPhone = (phone) => {
-    const bookings = getBookings();
-    return bookings.filter(b => b.customerPhone === phone);
-};
-
-// Get field by id
-export const getFieldById = (id) => {
-    const fields = getFields();
-    return fields.find(f => f.id === id);
 };
 
 // Format date to Thai
 export const formatDateThai = (dateStr) => {
     const date = new Date(dateStr);
-    const options = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    };
-    return date.toLocaleDateString('th-TH', options);
+    return date.toLocaleDateString('th-TH', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
 };
 
 // Format price
 export const formatPrice = (price) => {
     return new Intl.NumberFormat('th-TH').format(price);
+};
+
+// ========== Firestore CRUD (async) ==========
+
+// --- Fields ---
+
+export const getFields = async () => {
+    try {
+        const snapshot = await getDocs(collection(db, 'fields'));
+        if (snapshot.empty) return [];
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getFields error:', err);
+        return [];
+    }
+};
+
+export const getFieldById = async (id) => {
+    try {
+        const docRef = doc(db, 'fields', id);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) return { id: snap.id, ...snap.data() };
+        return null;
+    } catch (err) {
+        console.error('getFieldById error:', err);
+        return null;
+    }
+};
+
+export const addField = async (field) => {
+    try {
+        const newId = `field-${Date.now()}`;
+        const newField = { ...field, id: newId };
+        await setDoc(doc(db, 'fields', newId), newField);
+        return newField;
+    } catch (err) {
+        console.error('addField error:', err);
+        return null;
+    }
+};
+
+export const updateField = async (fieldId, updatedData) => {
+    try {
+        const docRef = doc(db, 'fields', fieldId);
+        await updateDoc(docRef, updatedData);
+        return { id: fieldId, ...updatedData };
+    } catch (err) {
+        console.error('updateField error:', err);
+        return null;
+    }
+};
+
+export const deleteField = async (fieldId) => {
+    try {
+        await deleteDoc(doc(db, 'fields', fieldId));
+    } catch (err) {
+        console.error('deleteField error:', err);
+    }
+};
+
+// --- Settings ---
+
+export const getSettings = async () => {
+    try {
+        const snap = await getDoc(doc(db, 'settings', 'global'));
+        if (snap.exists()) return { ...defaultSettings, ...snap.data() };
+        return defaultSettings;
+    } catch (err) {
+        console.error('getSettings error:', err);
+        return defaultSettings;
+    }
+};
+
+export const saveSettings = async (settings) => {
+    try {
+        await setDoc(doc(db, 'settings', 'global'), settings, { merge: true });
+    } catch (err) {
+        console.error('saveSettings error:', err);
+    }
+};
+
+// --- Bookings ---
+
+export const getBookings = async () => {
+    try {
+        const snapshot = await getDocs(collection(db, 'bookings'));
+        if (snapshot.empty) return [];
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getBookings error:', err);
+        return [];
+    }
+};
+
+export const addBooking = async (booking) => {
+    try {
+        const settings = await getSettings();
+        const now = new Date();
+        const deadline = new Date(now.getTime() + settings.bookingTimeoutMinutes * 60000);
+        const newId = `booking-${Date.now()}`;
+
+        const newBooking = {
+            ...booking,
+            id: newId,
+            status: 'pending',
+            slots: booking.slots || [booking.timeSlot],
+            totalPrice: booking.totalPrice || booking.price,
+            createdAt: now.toISOString(),
+            paymentDeadline: deadline.toISOString()
+        };
+
+        await setDoc(doc(db, 'bookings', newId), newBooking);
+        return newBooking;
+    } catch (err) {
+        console.error('addBooking error:', err);
+        return null;
+    }
+};
+
+export const confirmBookingPayment = async (bookingId) => {
+    try {
+        const docRef = doc(db, 'bookings', bookingId);
+        const snap = await getDoc(docRef);
+        if (snap.exists() && snap.data().status === 'pending') {
+            await updateDoc(docRef, {
+                status: 'confirmed',
+                confirmedAt: new Date().toISOString()
+            });
+            return true;
+        }
+        return false;
+    } catch (err) {
+        console.error('confirmBookingPayment error:', err);
+        return false;
+    }
+};
+
+export const uploadPaymentSlip = async (bookingId, slipData) => {
+    try {
+        const docRef = doc(db, 'bookings', bookingId);
+        await updateDoc(docRef, {
+            paymentSlip: slipData,
+            slipUploadedAt: new Date().toISOString()
+        });
+        return true;
+    } catch (err) {
+        console.error('uploadPaymentSlip error:', err);
+        return false;
+    }
+};
+
+export const expireOverdueBookings = async () => {
+    try {
+        // Query only pending bookings (optimized — no need to fetch all)
+        const q = query(collection(db, 'bookings'), where('status', '==', 'pending'));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return false;
+
+        const now = new Date();
+        let changed = false;
+
+        for (const d of snapshot.docs) {
+            const b = { id: d.id, ...d.data() };
+            if (!b.paymentSlip && new Date(b.paymentDeadline) < now) {
+                await updateDoc(doc(db, 'bookings', b.id), { status: 'expired' });
+                changed = true;
+            }
+        }
+        return changed;
+    } catch (err) {
+        console.error('expireOverdueBookings error:', err);
+        return false;
+    }
+};
+
+export const cancelBooking = async (bookingId) => {
+    try {
+        await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled' });
+        return true;
+    } catch (err) {
+        console.error('cancelBooking error:', err);
+        return false;
+    }
+};
+
+export const deleteBooking = async (bookingId) => {
+    try {
+        await deleteDoc(doc(db, 'bookings', bookingId));
+    } catch (err) {
+        console.error('deleteBooking error:', err);
+    }
+};
+
+export const isSlotBooked = async (fieldId, date, timeSlot) => {
+    try {
+        // Query only bookings matching fieldId + date (optimized)
+        const q = query(
+            collection(db, 'bookings'),
+            where('fieldId', '==', fieldId),
+            where('date', '==', date)
+        );
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return false;
+
+        return snapshot.docs.some(d => {
+            const b = d.data();
+            if (b.status === 'cancelled' || b.status === 'expired') return false;
+            const slots = b.slots || [b.timeSlot];
+            return slots.includes(timeSlot);
+        });
+    } catch (err) {
+        console.error('isSlotBooked error:', err);
+        return false;
+    }
+};
+
+export const getBookingsByPhone = async (phone) => {
+    try {
+        // Query only bookings matching phone (optimized)
+        const q = query(collection(db, 'bookings'), where('customerPhone', '==', phone));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return [];
+        return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+        console.error('getBookingsByPhone error:', err);
+        return [];
+    }
+};
+
+// ========== Seeding ==========
+
+export const seedDefaultData = async () => {
+    try {
+        // Seed fields if empty
+        const fieldsSnap = await getDocs(collection(db, 'fields'));
+        if (fieldsSnap.empty) {
+            for (const field of defaultFields) {
+                await setDoc(doc(db, 'fields', field.id), field);
+            }
+            console.log('✅ Seeded default fields');
+        }
+
+        // Seed settings if not exists
+        const settingsSnap = await getDoc(doc(db, 'settings', 'global'));
+        if (!settingsSnap.exists()) {
+            await setDoc(doc(db, 'settings', 'global'), defaultSettings);
+            console.log('✅ Seeded default settings');
+        }
+
+        return true;
+    } catch (err) {
+        console.error('seedDefaultData error:', err);
+        return false;
+    }
 };

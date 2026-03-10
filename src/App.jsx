@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import MarketingLayout from './layouts/MarketingLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import AuthGuard from './components/layout/AuthGuard';
+import { seedAll } from './seedFirestore';
 
 // Pages
 import Home from './pages/Home';
@@ -24,41 +27,46 @@ import UserManagement from './features/dashboard/UserManagement';
 import './index.css';
 
 function App() {
+  // Auto-seed Firestore on first load (skips if data already exists)
+  useEffect(() => { seedAll().catch(console.error); }, []);
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes (Marketing) */}
-          <Route element={<MarketingLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/field/:id" element={<FieldDetail />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-          </Route>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes (Marketing) */}
+            <Route element={<MarketingLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/field/:id" element={<FieldDetail />} />
+              <Route path="/my-bookings" element={<MyBookings />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
 
-          {/* Protected Routes (Dashboard) — Admin/Owner only */}
-          <Route path="/dashboard" element={
-            <AuthGuard requiredRole="admin">
-              <DashboardLayout />
-            </AuthGuard>
-          }>
-            <Route index element={<Overview />} />
-            <Route path="bookings" element={<Bookings />} />
-            <Route path="bookings/:id" element={<BookingDetail />} />
-            <Route path="schedule" element={<Schedule />} />
-            <Route path="fields" element={<Fields />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
+            {/* Protected Routes (Dashboard) — Admin/Owner only */}
+            <Route path="/dashboard" element={
+              <AuthGuard requiredRole="admin">
+                <DashboardLayout />
+              </AuthGuard>
+            }>
+              <Route index element={<Overview />} />
+              <Route path="bookings" element={<Bookings />} />
+              <Route path="bookings/:id" element={<BookingDetail />} />
+              <Route path="schedule" element={<Schedule />} />
+              <Route path="fields" element={<Fields />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
 
-          {/* Redirects */}
-          <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* Redirects */}
+            <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

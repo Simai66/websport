@@ -55,18 +55,18 @@ export default function Home() {
     const [liveStats, setLiveStats] = useState({ fields: 0, bookings: 0, confirmed: 0 });
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            const loadedFields = getFields();
+        const loadData = async () => {
+            const loadedFields = await getFields();
             setFields(loadedFields);
-            const bookings = getBookings();
+            const bookings = await getBookings();
             const confirmed = bookings.filter(b => b.status === "confirmed").length;
             setLiveStats({
                 fields: loadedFields.length,
                 bookings: bookings.length,
                 confirmed
             });
-        }, 0);
-        return () => clearTimeout(timeoutId);
+        };
+        loadData();
     }, []);
 
     const filteredFields = fields.filter(field => {

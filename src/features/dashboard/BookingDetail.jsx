@@ -10,19 +10,17 @@ export default function BookingDetail() {
     const [actionDone, setActionDone] = useState('');
 
     useEffect(() => {
-        const loadBooking = () => {
-            const bookings = getBookings();
+        const loadBooking = async () => {
+            const bookings = await getBookings();
             const found = bookings.find(b => b.id === id);
             if (found) {
                 setBooking(found);
             } else {
-                // Fallback for short ID or if not found immediately
                 const foundByShortId = bookings.find(b => b.id.endsWith(id));
                 if (foundByShortId) setBooking(foundByShortId);
             }
         };
-        const timeoutId = setTimeout(loadBooking, 0);
-        return () => clearTimeout(timeoutId);
+        loadBooking();
     }, [id]);
 
     useEffect(() => {
@@ -44,15 +42,15 @@ export default function BookingDetail() {
         );
     }
 
-    const handleConfirm = () => {
-        confirmBookingPayment(booking.id);
+    const handleConfirm = async () => {
+        await confirmBookingPayment(booking.id);
         setBooking(prev => ({ ...prev, status: 'confirmed' }));
         setConfirmAction(null);
         setActionDone('อนุมัติการจองเรียบร้อย ✓');
     };
 
-    const handleReject = () => {
-        cancelBooking(booking.id);
+    const handleReject = async () => {
+        await cancelBooking(booking.id);
         setBooking(prev => ({ ...prev, status: 'cancelled' }));
         setConfirmAction(null);
         setActionDone('ปฏิเสธการจองเรียบร้อย');

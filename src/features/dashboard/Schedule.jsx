@@ -6,19 +6,20 @@ import { GiShuttlecock } from 'react-icons/gi';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 export default function Schedule() {
-    const [fields, setFields] = useState(() => { expireOverdueBookings(); return getFields(); });
-    const [bookings, setBookings] = useState(() => getBookings());
+    const [fields, setFields] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [filterType, setFilterType] = useState('all');
     const [popup, setPopup] = useState(null);
 
-    const loadData = () => {
-        expireOverdueBookings();
-        setFields(getFields());
-        setBookings(getBookings());
+    const loadData = async () => {
+        await expireOverdueBookings();
+        setFields(await getFields());
+        setBookings(await getBookings());
     };
 
     useEffect(() => {
+        loadData();
         const interval = setInterval(loadData, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -51,9 +52,9 @@ export default function Schedule() {
         });
     };
 
-    const handleConfirmBooking = (bookingId) => {
-        confirmBookingPayment(bookingId);
-        loadData();
+    const handleConfirmBooking = async (bookingId) => {
+        await confirmBookingPayment(bookingId);
+        await loadData();
         setPopup(null);
     };
 

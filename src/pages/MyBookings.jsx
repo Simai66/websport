@@ -24,27 +24,30 @@ export default function MyBookings() {
 
     // Auto-fill and auto-search when logged in
     useEffect(() => {
-        if (isAuthenticated && user?.phone && !searched) {
-            const userPhone = user.phone;
-            setPhone(userPhone);
-            expireOverdueBookings();
-            const allBookings = getBookings();
-            const userBookings = allBookings.filter(b => b.customerPhone === userPhone.trim());
-            setBookings(userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-            setSearched(true);
-        }
+        const loadBookings = async () => {
+            if (isAuthenticated && user?.phone && !searched) {
+                const userPhone = user.phone;
+                setPhone(userPhone);
+                await expireOverdueBookings();
+                const allBookings = await getBookings();
+                const userBookings = allBookings.filter(b => b.customerPhone === userPhone.trim());
+                setBookings(userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+                setSearched(true);
+            }
+        };
+        loadBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, user]);
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!phone.trim()) {
             setToastMessage('กรุณากรอกเบอร์โทรศัพท์');
             setToastType('error');
             setShowToast(true);
             return;
         }
-        expireOverdueBookings();
-        const allBookings = getBookings();
+        await expireOverdueBookings();
+        const allBookings = await getBookings();
         const userBookings = allBookings.filter(b => b.customerPhone === phone.trim());
         setBookings(userBookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         setSearched(true);
@@ -54,13 +57,13 @@ export default function MyBookings() {
         setConfirmState({ isOpen: true, bookingId });
     };
 
-    const confirmCancel = () => {
-        cancelBooking(confirmState.bookingId);
+    const confirmCancel = async () => {
+        await cancelBooking(confirmState.bookingId);
         setConfirmState({ isOpen: false, bookingId: null });
         setToastMessage('ยกเลิกการจองเรียบร้อยแล้ว');
         setToastType('success');
         setShowToast(true);
-        handleSearch();
+        await handleSearch();
     };
 
     const canCancel = (booking) => {

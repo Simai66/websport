@@ -20,10 +20,10 @@ export default function Fields() {
     });
 
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            setFieldsList(getFields());
-        }, 0);
-        return () => clearTimeout(timeoutId);
+        const loadFields = async () => {
+            setFieldsList(await getFields());
+        };
+        loadFields();
     }, []);
 
     const openAddFieldModal = () => {
@@ -61,7 +61,7 @@ export default function Fields() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSaveField = () => {
+    const handleSaveField = async () => {
         if (!validateForm()) return;
 
         const fieldData = {
@@ -73,22 +73,22 @@ export default function Fields() {
             facilities: fieldForm.facilities.split(',').map(f => f.trim()).filter(f => f)
         };
         if (editingField) {
-            updateField(editingField.id, fieldData);
+            await updateField(editingField.id, fieldData);
         } else {
-            addField(fieldData);
+            await addField(fieldData);
         }
         setShowFieldModal(false);
-        setFieldsList(getFields());
+        setFieldsList(await getFields());
     };
 
     const handleDeleteField = (fieldId) => {
         setConfirmState({ isOpen: true, fieldId });
     };
 
-    const confirmDelete = () => {
-        deleteField(confirmState.fieldId);
+    const confirmDelete = async () => {
+        await deleteField(confirmState.fieldId);
         setConfirmState({ isOpen: false, fieldId: null });
-        setFieldsList(getFields());
+        setFieldsList(await getFields());
     };
 
     const getTypeName = (type) => {

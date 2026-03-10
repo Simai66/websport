@@ -1,20 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getSettings, saveSettings } from '../../data';
 
 export default function Settings() {
-    const [settings, setSettingsState] = useState(() => getSettings());
+    const [settings, setSettingsState] = useState({});
     const [saved, setSaved] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            const s = await getSettings();
+            setSettingsState(s);
+            setLoading(false);
+        };
+        loadSettings();
+    }, []);
 
     const updateField = (key, value) => {
         setSettingsState(prev => ({ ...prev, [key]: value }));
         setSaved(false);
     };
 
-    const handleSave = () => {
-        saveSettings(settings);
+    const handleSave = async () => {
+        await saveSettings(settings);
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
     };
+
+    if (loading) return <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>กำลังโหลด...</div>;
 
     return (
         <div>

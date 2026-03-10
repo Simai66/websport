@@ -16,8 +16,8 @@ import { auth, db, googleProvider } from '../firebase';
 
 const AuthContext = createContext(null);
 
-// Owner email — hardcoded as the top-level owner
-const OWNER_EMAIL = 'armxbox27@gmail.com';
+// Owner email — from environment variable
+const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || '';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);

@@ -23,19 +23,31 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
     const [timeLeft, setTimeLeft] = useState(null);
     const [slipPreview, setSlipPreview] = useState(null);
     const [uploading, setUploading] = useState(false);
-    const settings = getSettings();
+    const [settings, setSettings] = useState({ promptPayNumber: '', bookingTimeoutMinutes: 10 });
     const timerRef = useRef(null);
     const fileInputRef = useRef(null);
     const timerInitialized = useRef(false);
 
+    // Load settings async
     useEffect(() => {
-        if (booking?.id) {
-            const allBookings = getBookings();
-            const freshBooking = allBookings.find(b => b.id === booking.id);
-            if (freshBooking?.paymentSlip) {
-                setSlipPreview(freshBooking.paymentSlip);
+        const loadSettings = async () => {
+            const s = await getSettings();
+            setSettings(s);
+        };
+        loadSettings();
+    }, []);
+
+    useEffect(() => {
+        const loadSlip = async () => {
+            if (booking?.id) {
+                const allBookings = await getBookings();
+                const freshBooking = allBookings.find(b => b.id === booking.id);
+                if (freshBooking?.paymentSlip) {
+                    setSlipPreview(freshBooking.paymentSlip);
+                }
             }
-        }
+        };
+        loadSlip();
     }, [booking?.id]);
 
     useEffect(() => {
@@ -116,7 +128,7 @@ export default function QRPayment({ amount, onTimeout, onClose, booking, onSlipU
                 const compressed = await compressImage(event.target.result);
                 setSlipPreview(compressed);
                 if (booking?.id) {
-                    uploadPaymentSlip(booking.id, compressed);
+                    await uploadPaymentSlip(booking.id, compressed);
                     if (onSlipUploaded) onSlipUploaded(compressed);
                 }
             } catch {

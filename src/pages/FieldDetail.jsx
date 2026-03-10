@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Calendar from '../components/Calendar';
 import Toast from '../components/Toast';
@@ -9,7 +9,7 @@ import { BiDroplet } from 'react-icons/bi';
 import {
     getFieldById,
     timeSlots,
-    isSlotBooked,
+    getBookings,
     addBooking,
     getSettings,
     formatPrice,
@@ -21,14 +21,35 @@ import { useAuth } from '../contexts/AuthContext';
 export default function FieldDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const field = getFieldById(id);
-    const settings = getSettings();
+    const { user } = useAuth();
+
+    const [field, setField] = useState(null);
+    const [settings, setSettings] = useState({ bookingTimeoutMinutes: 10, maxHoursPerBooking: 4 });
+    const [loading, setLoading] = useState(true);
+    const [bookedSlots, setBookedSlots] = useState([]); // cached bookings for slot checking
 
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedSlots, setSelectedSlots] = useState([]);
     const [customerName, setCustomerName] = useState('');
     const [customerPhone, setCustomerPhone] = useState('');
-    const { user } = useAuth();
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('success');
+    const [showQR, setShowQR] = useState(false);
+    const [currentBooking, setCurrentBooking] = useState(null);
+    const [showThankYou, setShowThankYou] = useState(false);
+
+    // Load field and settings
+    useEffect(() => {
+        const loadData = async () => {
+            setLoading(true);
+            const [f, s] = await Promise.all([getFieldById(id), getSettings()]);
+            setField(f);
+            setSettings(s);
+            setLoading(false);
+        };
+        loadData();
+    }, [id]);
 
     // Auto-fill from user profile
     useEffect(() => {
@@ -38,14 +59,42 @@ export default function FieldDetail() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastType, setToastType] = useState('success');
-    const [showQR, setShowQR] = useState(false);
-    const [currentBooking, setCurrentBooking] = useState(null);
-    const [showThankYou, setShowThankYou] = useState(false);
+
+    // Load bookings when date changes (for slot availability)
+    const loadBookedSlots = useCallback(async () => {
+        if (!field || !selectedDate) return;
+        const allBookings = await getBookings();
+        const relevant = allBookings.filter(b => {
+            if (b.fieldId !== field.id || b.date !== selectedDate) return false;
+            if (b.status === 'cancelled' || b.status === 'expired') return false;
+            return true;
+        });
+        setBookedSlots(relevant);
+    }, [field, selectedDate]);
+
+    useEffect(() => {
+        loadBookedSlots();
+    }, [loadBookedSlots]);
+
+    // Check if slot is booked (synchronous — uses cached data)
+    const isSlotBookedLocal = (slot) => {
+        return bookedSlots.some(b => {
+            const slots = b.slots || [b.timeSlot];
+            return slots.includes(slot);
+        });
+    };
 
     const maxSlots = settings.maxHoursPerBooking || 4;
+
+    if (loading) {
+        return (
+            <div className="page-header">
+                <div className="container" style={{ textAlign: 'center', padding: '4rem 0' }}>
+                    <p style={{ color: 'var(--text-muted)' }}>กำลังโหลด...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!field) {
         return (
@@ -64,7 +113,7 @@ export default function FieldDetail() {
     }
 
     const handleSlotClick = (slot) => {
-        if (isSlotBooked(field.id, selectedDate, slot)) return;
+        if (isSlotBookedLocal(slot)) return;
         const slotIndex = timeSlots.indexOf(slot);
         if (selectedSlots.includes(slot)) {
             const selectedIndices = selectedSlots.map(s => timeSlots.indexOf(s)).sort((a, b) => a - b);
@@ -83,7 +132,7 @@ export default function FieldDetail() {
                     const newMax = Math.max(maxIndex, slotIndex);
                     let allAvailable = true;
                     for (let i = newMin; i <= newMax; i++) {
-                        if (isSlotBooked(field.id, selectedDate, timeSlots[i])) {
+                        if (isSlotBookedLocal(timeSlots[i])) {
                             allAvailable = false;
                             break;
                         }
@@ -99,7 +148,7 @@ export default function FieldDetail() {
     };
 
     const canSelectSlot = (slot) => {
-        if (isSlotBooked(field.id, selectedDate, slot)) return false;
+        if (isSlotBookedLocal(slot)) return false;
         if (selectedSlots.length === 0) return true;
         if (selectedSlots.includes(slot)) return true;
         if (selectedSlots.length >= maxSlots) return false;
@@ -110,7 +159,7 @@ export default function FieldDetail() {
 
     const totalPrice = selectedSlots.length * field.price;
 
-    const handleBooking = () => {
+    const handleBooking = async () => {
         if (!selectedDate || selectedSlots.length === 0) {
             setToastMessage('กรุณาเลือกวันที่และเวลา');
             setToastType('error');
@@ -124,7 +173,7 @@ export default function FieldDetail() {
             return;
         }
         for (const slot of selectedSlots) {
-            if (isSlotBooked(field.id, selectedDate, slot)) {
+            if (isSlotBookedLocal(slot)) {
                 setToastMessage('บางช่วงเวลาถูกจองไปแล้ว กรุณาเลือกใหม่');
                 setToastType('error');
                 setShowToast(true);
@@ -132,7 +181,7 @@ export default function FieldDetail() {
                 return;
             }
         }
-        const booking = addBooking({
+        const booking = await addBooking({
             fieldId: field.id,
             fieldName: field.name,
             fieldImage: field.image,
@@ -149,6 +198,8 @@ export default function FieldDetail() {
         setToastMessage('จองสำเร็จ! กรุณาชำระเงินภายในเวลาที่กำหนด');
         setToastType('success');
         setShowToast(true);
+        // Reload booked slots
+        await loadBookedSlots();
     };
 
     const handleQRClose = () => {
@@ -189,7 +240,6 @@ export default function FieldDetail() {
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         if (selectedDate !== todayStr) return false;
-        // slot format: "08:00-09:00" — check if the start hour has passed
         const slotHour = parseInt(slot.split(':')[0], 10);
         return slotHour <= now.getHours();
     };
@@ -318,7 +368,7 @@ export default function FieldDetail() {
                                     </label>
                                     <div className="time-slots">
                                         {timeSlots.map(slot => {
-                                            const booked = isSlotBooked(field.id, selectedDate, slot);
+                                            const booked = isSlotBookedLocal(slot);
                                             const past = isSlotPast(slot);
                                             const selected = selectedSlots.includes(slot);
                                             const canSelect = canSelectSlot(slot) && !past;
